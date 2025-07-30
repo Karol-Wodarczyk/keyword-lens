@@ -1,11 +1,54 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DataTab } from '../components/DataTab';
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState('data');
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-subtle">
+      <div className="container mx-auto p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-1 lg:w-auto lg:grid-cols-4 mb-6 bg-card shadow-card">
+            <TabsTrigger 
+              value="data" 
+              className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
+            >
+              Data
+            </TabsTrigger>
+            <TabsTrigger value="analytics" disabled className="opacity-50">
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="settings" disabled className="opacity-50">
+              Settings
+            </TabsTrigger>
+            <TabsTrigger value="export" disabled className="opacity-50">
+              Export
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="data" className="mt-0">
+            <DataTab />
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="mt-0">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Analytics tab coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="settings" className="mt-0">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Settings tab coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="export" className="mt-0">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Export tab coming soon...</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
