@@ -66,7 +66,10 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   };
 
   return (
-    <Card className="p-6 shadow-card bg-gradient-card">
+    <Card className="p-6 shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden animate-scale-in">
+      {/* Card glow effect */}
+      <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+      <div className="relative z-10">{/* content wrapper */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Keyword Search Section */}
         <div className="flex-1">
@@ -199,7 +202,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
       {/* Selected Keywords Display */}
       {selectedCount > 0 && (
-        <div className="mt-4 pt-4 border-t">
+        <div className="mt-4 pt-4 border-t border-primary/20">
           <div className="flex flex-wrap gap-2">
             {keywords
               .filter(k => k.isSelected)
@@ -207,14 +210,14 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 <Badge
                   key={keyword.id}
                   variant="default"
-                  className="bg-gradient-primary text-white px-3 py-1"
+                  className="bg-gradient-primary text-white px-3 py-1 shadow-glow hover:shadow-hover transition-glow animate-scale-in"
                 >
                   {keyword.text}
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => onKeywordToggle(keyword.id)}
-                    className="ml-2 h-4 w-4 p-0 hover:bg-white/20"
+                    className="ml-2 h-4 w-4 p-0 hover:bg-white/20 transition-colors duration-200"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -223,6 +226,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           </div>
         </div>
       )}
+      </div> {/* Close content wrapper */}
     </Card>
   );
 };

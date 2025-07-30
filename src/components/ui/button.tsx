@@ -5,19 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden",
   {
     variants: {
       variant: {
-        default: "bg-gradient-primary text-white shadow-elegant hover:shadow-hover transform hover:scale-[1.02] transition-all duration-300",
+        default: "bg-gradient-primary text-white shadow-elegant hover:shadow-glow transform hover:scale-[1.02] transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-glow before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-card",
         outline:
-          "border border-input bg-card hover:bg-accent hover:text-accent-foreground shadow-card",
+          "border border-input bg-card hover:bg-accent hover:text-accent-foreground shadow-card hover:shadow-hover hover:border-primary/50 transition-all duration-300",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-card hover:shadow-hover transition-all duration-300",
+        ghost: "hover:bg-accent hover:text-accent-foreground transition-all duration-200",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary-glow transition-colors duration-200",
+        glow: "bg-gradient-primary text-white shadow-glow animate-glow-pulse before:absolute before:inset-0 before:bg-gradient-glow before:opacity-50 hover:before:opacity-75 before:transition-opacity before:duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",
