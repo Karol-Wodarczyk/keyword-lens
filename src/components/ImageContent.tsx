@@ -19,27 +19,43 @@ interface ImageContentProps {
 const mockAlbums: Album[] = [
   {
     id: '1',
-    name: 'Factory Images',
+    name: 'Factory Production Line',
     imageCount: 45,
     thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['landscape', 'nature'],
+    keywords: ['machine', 'production', 'factory'],
     timestamp: Date.now() - 86400000 * 5 // 5 days ago
   },
   {
     id: '2',
-    name: 'Urban Photography',
+    name: 'Quality Control Center',
     imageCount: 32,
     thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['urban', 'street', 'architecture'],
+    keywords: ['quality', 'control', 'equipment'],
     timestamp: Date.now() - 86400000 * 10 // 10 days ago
   },
   {
     id: '3',
-    name: 'Portrait Collection',
+    name: 'Assembly & Packaging',
     imageCount: 28,
     thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['portrait'],
+    keywords: ['assembly', 'packaging', 'conveyor'],
     timestamp: Date.now() - 86400000 * 2 // 2 days ago
+  },
+  {
+    id: '4',
+    name: 'Automated Manufacturing',
+    imageCount: 38,
+    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
+    keywords: ['automatic', 'robotic', 'manufacturing'],
+    timestamp: Date.now() - 86400000 * 7 // 7 days ago
+  },
+  {
+    id: '5',
+    name: 'Industrial Operations',
+    imageCount: 25,
+    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
+    keywords: ['industrial', 'worker', 'plastic'],
+    timestamp: Date.now() - 86400000 * 3 // 3 days ago
   }
 ];
 
@@ -301,7 +317,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <h4 className="font-medium text-foreground">Albums</h4>
                     <Badge variant="outline">{albums.length}</Badge>
                   </div>
-                  
+
                   {albums.length > 0 ? (
                     <div className="space-y-3">
                       {albums.map((album) => (
@@ -355,7 +371,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <h4 className="font-medium text-foreground">Images</h4>
                     <Badge variant="outline">{keywordFrames.length}</Badge>
                   </div>
-                  
+
                   {keywordFrames.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {keywordFrames.map((image) => (
