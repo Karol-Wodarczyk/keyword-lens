@@ -1,13 +1,13 @@
 // API Configuration
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5003',
   timeout: 30000, // 30 seconds
   retries: 3,
 };
 
 // Helper to check if API is configured
 export const isApiConfigured = (): boolean => {
-  return Boolean(API_CONFIG.baseUrl && API_CONFIG.baseUrl !== 'http://localhost:8000');
+  return Boolean(API_CONFIG.baseUrl && API_CONFIG.baseUrl !== 'http://localhost:5003');
 };
 
 // Development fallback message
