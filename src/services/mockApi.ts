@@ -42,62 +42,105 @@ const mockFrameMetadata: FrameMetaDataDto[] = Array.from({ length: 100 }, (_, i)
 // Mock Frame Keywords Data
 const mockFrameKeywords: FrameKeywordDataDto[] = [];
 
-// First, ensure every keyword gets assigned to at least some frames
-// This guarantees no keyword will have zero frames
-mockKeywords.forEach(keyword => {
-    // Each keyword appears in 10-25 random frames to ensure good distribution
-    const targetCount = Math.floor(Math.random() * 16) + 10; // 10-25 frames per keyword
-    const frameIndices = Array.from({ length: 100 }, (_, i) => i + 1)
-        .sort(() => 0.5 - Math.random())
-        .slice(0, targetCount);
+// STRATEGIC APPROACH: Create keywords with specific frame counts for each occurrence level
+// This ensures we have keywords in all occurrence ranges
 
-    frameIndices.forEach(frameId => {
-        mockFrameKeywords.push({
-            Id: mockFrameKeywords.length + 1,
-            FrameId: frameId,
-            KeywordId: keyword.Id,
-            KeywordName: keyword.Name,
-            Confidence: Math.random() * 0.4 + 0.6, // 0.6-1.0 confidence
-            X1: Math.random() * 800,
-            Y1: Math.random() * 600,
-            X2: Math.random() * 800 + 800,
-            Y2: Math.random() * 600 + 600
-        });
-    });
-});
+// Define keywords with their target frame counts for different occurrence levels
+const keywordFrameStrategy = [
+    // HIGH OCCURRENCE (20+ frames)
+    { keyword: "machine", targetFrames: 35 },
+    { keyword: "production", targetFrames: 28 },
+    { keyword: "manufacturing", targetFrames: 32 },
+    { keyword: "factory", targetFrames: 25 },
+    { keyword: "industrial", targetFrames: 22 },
 
-// Then add some additional random relationships to make it more realistic
-mockFrameMetadata.forEach(frame => {
-    const additionalKeywords = Math.floor(Math.random() * 3); // 0-2 additional keywords
-    if (additionalKeywords > 0) {
-        const randomKeywords = mockKeywords
-            .sort(() => 0.5 - Math.random())
-            .slice(0, additionalKeywords)
-            .filter(keyword => !mockFrameKeywords.some(fk => 
-                fk.FrameId === frame.Id && fk.KeywordId === keyword.Id
-            )); // Avoid duplicates
+    // MEDIUM OCCURRENCE (5-19 frames)  
+    { keyword: "quality", targetFrames: 15 },
+    { keyword: "equipment", targetFrames: 12 },
+    { keyword: "assembly", targetFrames: 18 },
+    { keyword: "conveyor", targetFrames: 10 },
+    { keyword: "robotic", targetFrames: 8 },
 
-        randomKeywords.forEach(keyword => {
+    // LOW OCCURRENCE (1-4 frames)
+    { keyword: "automatic", targetFrames: 3 },
+    { keyword: "plastic", targetFrames: 4 },
+    { keyword: "worker", targetFrames: 2 },
+    { keyword: "control", targetFrames: 3 },
+    { keyword: "packaging", targetFrames: 1 }
+];
+
+// Generate frame-keyword relationships based on the strategy
+keywordFrameStrategy.forEach(({ keyword: keywordName, targetFrames }) => {
+    const keyword = mockKeywords.find(k => k.Name === keywordName);
+    if (keyword) {
+        console.log(`🎯 Assigning ${targetFrames} frames to "${keywordName}" (ID: ${keyword.Id})`);
+
+        // Generate frame IDs for this keyword (distributed across the 100 frames)
+        const step = Math.floor(100 / targetFrames);
+        const startOffset = keyword.Id % 10; // Use keyword ID to create variation
+
+        for (let i = 0; i < targetFrames; i++) {
+            const frameId = ((startOffset + i * step) % 100) + 1;
+
             mockFrameKeywords.push({
                 Id: mockFrameKeywords.length + 1,
-                FrameId: frame.Id,
+                FrameId: frameId,
                 KeywordId: keyword.Id,
                 KeywordName: keyword.Name,
-                Confidence: Math.random() * 0.4 + 0.6,
+                Confidence: 0.7 + Math.random() * 0.3, // 0.7-1.0 confidence
+                X1: Math.random() * 800,
+                Y1: Math.random() * 600,
+                X2: Math.random() * 800 + 800,
+                Y2: Math.random() * 600 + 600
+            });
+        }
+    }
+});// VERIFICATION: Ensure no keyword has zero frames
+const keywordsWithNoFrames = mockKeywords.filter(k => k.Count === 0);
+if (keywordsWithNoFrames.length > 0) {
+    console.error('🚨 CRITICAL: Some keywords have NO frames assigned:', keywordsWithNoFrames.map(k => k.Name));
+
+    // Emergency fix: Add frames to keywords with zero frames
+    keywordsWithNoFrames.forEach(keyword => {
+        const emergencyFrameIds = [1, 2, 3, 4, 5]; // Use first 5 frames as emergency backup
+        emergencyFrameIds.forEach(frameId => {
+            mockFrameKeywords.push({
+                Id: mockFrameKeywords.length + 1,
+                FrameId: frameId,
+                KeywordId: keyword.Id,
+                KeywordName: keyword.Name,
+                Confidence: 0.9, // High confidence
                 X1: Math.random() * 800,
                 Y1: Math.random() * 600,
                 X2: Math.random() * 800 + 800,
                 Y2: Math.random() * 600 + 600
             });
         });
-    }
-});
+        keyword.Count = 5; // Update count
+        console.log(`🔧 Emergency fix: Added 5 frames to keyword "${keyword.Name}"`);
+    });
+} else {
+    console.log('✅ All keywords have frames assigned');
+}
 
-// Calculate actual keyword counts based on frame associations
+// FINAL STEP: Calculate actual keyword counts
 mockKeywords.forEach(keyword => {
     const actualCount = mockFrameKeywords.filter(fk => fk.KeywordId === keyword.Id).length;
     keyword.Count = actualCount;
+
+    // Determine occurrence level for this keyword
+    let occurrenceLevel = 'none';
+    if (actualCount >= 20) occurrenceLevel = 'high';
+    else if (actualCount >= 5) occurrenceLevel = 'medium';
+    else if (actualCount >= 1) occurrenceLevel = 'low';
+
+    console.log(`🎯 Keyword "${keyword.Name}" (ID: ${keyword.Id}): ${actualCount} frames [${occurrenceLevel} occurrence]`);
 });
+
+console.log('🎯 STRATEGIC TEST: Keywords distributed across all occurrence levels:');
+console.log('  📈 HIGH (20+): machine, production, manufacturing, factory, industrial');
+console.log('  📊 MEDIUM (5-19): quality, equipment, assembly, conveyor, robotic');
+console.log('  📉 LOW (1-4): automatic, plastic, worker, control, packaging');
 
 // Debug: Log the frame-keyword generation results
 console.log('🎭 Mock Data Generation Complete:');
@@ -108,8 +151,23 @@ console.log(`🏷️ Using ${mockKeywords.length} keywords`);
 // Show keyword counts
 console.log('🔢 Keyword counts (frames containing each keyword):');
 mockKeywords.forEach(keyword => {
-    console.log(`  ${keyword.Name}: ${keyword.Count} frames`);
+    const frameCount = keyword.Count;
+    const actualFrameCount = mockFrameKeywords.filter(fk => fk.KeywordId === keyword.Id).length;
+    const status = frameCount > 0 ? '✅' : '❌';
+    const countMatch = frameCount === actualFrameCount ? '✅' : '❌';
+    console.log(`  ${status} ${keyword.Name}: ${frameCount} frames ${countMatch} (actual: ${actualFrameCount})`);
 });
+
+// Verify minimum coverage
+const totalKeywordsWithFrames = mockKeywords.filter(k => k.Count > 0).length;
+const totalKeywords = mockKeywords.length;
+console.log(`📊 Coverage: ${totalKeywordsWithFrames}/${totalKeywords} keywords have frames (${((totalKeywordsWithFrames / totalKeywords) * 100).toFixed(1)}%)`);
+
+if (totalKeywordsWithFrames === totalKeywords) {
+    console.log('🎉 PERFECT: All keywords have frame associations!');
+} else {
+    console.warn(`⚠️ WARNING: ${totalKeywords - totalKeywordsWithFrames} keywords have no frames`);
+}
 
 // Show sample relationships for debugging
 const sampleRelationships = mockFrameKeywords.slice(0, 10).map(fk => ({
@@ -121,9 +179,9 @@ console.log('🔍 Sample frame-keyword relationships:', sampleRelationships);
 
 // Mock Frame Images (base64 encoded placeholder) 
 const createMockImageBase64 = (frameId: number): string => {
-  // Create a simple canvas-based image as backup
-  try {
-    const svg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    // Create a simple canvas-based image as backup
+    try {
+        const svg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="grad${frameId}" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#f0f0f0;stop-opacity:1" />
@@ -143,19 +201,19 @@ const createMockImageBase64 = (frameId: number): string => {
         <circle cx="400" cy="450" r="35" fill="#45b7d1" opacity="0.7"/>
         <rect x="300" y="150" width="200" height="80" fill="#96ceb4" opacity="0.5" rx="5"/>
       </svg>`;
-    
-    // Properly encode the SVG
-    return btoa(unescape(encodeURIComponent(svg)));
-  } catch (error) {
-    console.error('Error creating mock image:', error);
-    // Fallback to a simple base64 image
-    return 'PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY2NiI+RnJhbWU8L3RleHQ+Cjwvc3ZnPg==';
-  }
+
+        // Properly encode the SVG
+        return btoa(unescape(encodeURIComponent(svg)));
+    } catch (error) {
+        console.error('Error creating mock image:', error);
+        // Fallback to a simple base64 image
+        return 'PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY2NiI+RnJhbWU8L3RleHQ+Cjwvc3ZnPg==';
+    }
 };
 
 const createMockThumbnailBase64 = (frameId: number): string => {
-  try {
-    const svg = `<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+    try {
+        const svg = `<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="thumbGrad${frameId}" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
@@ -174,14 +232,14 @@ const createMockThumbnailBase64 = (frameId: number): string => {
         <circle cx="150" cy="100" r="6" fill="#4ecdc4" opacity="0.8"/>
         <rect x="80" y="90" width="40" height="20" fill="#96ceb4" opacity="0.6" rx="2"/>
       </svg>`;
-    
-    // Properly encode the SVG
-    return btoa(unescape(encodeURIComponent(svg)));
-  } catch (error) {
-    console.error('Error creating mock thumbnail:', error);
-    // Fallback to a simple base64 thumbnail
-    return 'PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSI+VGh1bWI8L3RleHQ+Cjwvc3ZnPg==';
-  }
+
+        // Properly encode the SVG
+        return btoa(unescape(encodeURIComponent(svg)));
+    } catch (error) {
+        console.error('Error creating mock thumbnail:', error);
+        // Fallback to a simple base64 thumbnail
+        return 'PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSI+VGh1bWI8L3RleHQ+Cjwvc3ZnPg==';
+    }
 };// Mock Bounding Boxes
 const mockBoundingBoxes: { [key: string]: BoundingBoxDto[] } = {};
 mockFrameKeywords.forEach(fk => {
@@ -217,18 +275,39 @@ export const mockApiClient = {
         console.log('🎭 Mock: Getting frames for keywords', params);
         await delay(400);
 
+        // SPECIFIC DEBUG for quality keyword
+        if (params.keyword_ids.includes(13)) {
+            console.log('🎯 QUALITY DEBUG: Quality keyword (ID: 13) requested!');
+            const qualityRelationships = mockFrameKeywords.filter(fk => fk.KeywordId === 13);
+            console.log('🎯 QUALITY DEBUG: Found relationships:', qualityRelationships);
+        }
+
         // Debug: Show all available frame-keyword relationships
         console.log('🎭 Mock: Total frame-keyword relationships:', mockFrameKeywords.length);
-        
+
+        // Debug: Show keyword names for the requested IDs
+        const requestedKeywordNames = params.keyword_ids.map(id => {
+            const keyword = mockKeywords.find(k => k.Id === id);
+            return keyword ? keyword.Name : `Unknown(${id})`;
+        });
+        console.log('🎭 Mock: Requested keyword names:', requestedKeywordNames);
+
+        // Debug: Check frame count for each requested keyword individually
+        params.keyword_ids.forEach(keywordId => {
+            const keywordName = mockKeywords.find(k => k.Id === keywordId)?.Name || `Unknown(${keywordId})`;
+            const framesForThisKeyword = mockFrameKeywords.filter(fk => fk.KeywordId === keywordId);
+            console.log(`🎭 Mock: Keyword "${keywordName}" (ID: ${keywordId}) has ${framesForThisKeyword.length} frame associations`);
+        });
+
         // Find frames that contain any of the specified keywords
-        const relevantFrameKeywords = mockFrameKeywords.filter(fk => 
+        const relevantFrameKeywords = mockFrameKeywords.filter(fk =>
             params.keyword_ids.includes(fk.KeywordId) &&
             fk.Confidence >= params.confidence_min &&
             fk.Confidence <= params.confidence_max
         );
 
         const frameIds = [...new Set(relevantFrameKeywords.map(fk => fk.FrameId))];
-        
+
         console.log('🎭 Mock: Keyword IDs requested:', params.keyword_ids);
         console.log('🎭 Mock: Confidence range:', [params.confidence_min, params.confidence_max]);
         console.log('🎭 Mock: Found frame-keyword relationships:', relevantFrameKeywords.length);
@@ -238,7 +317,12 @@ export const mockApiClient = {
             keywordName: fk.KeywordName,
             confidence: fk.Confidence.toFixed(2)
         })));
-        console.log('🎭 Mock: Unique frame IDs:', frameIds);
+        console.log('🎭 Mock: Unique frame IDs returned:', frameIds.length, frameIds.slice(0, 10));
+
+        // SPECIFIC DEBUG for quality keyword
+        if (params.keyword_ids.includes(13)) {
+            console.log('🎯 QUALITY DEBUG: Returning frame IDs for quality:', frameIds);
+        }
 
         return {
             values: frameIds
@@ -297,6 +381,29 @@ export const mockApiClient = {
         const dataUrl = `data:${mimeType};base64,${base64}`;
         console.log(`🖼️ Mock: Creating data URL for ${type}, length: ${base64.length}, URL preview: ${dataUrl.substring(0, 100)}...`);
         return dataUrl;
+    },
+
+    // DEBUG: Direct test function
+    debugQualityKeyword(): void {
+        const qualityKeyword = mockKeywords.find(k => k.Name === 'quality');
+        console.log('🔧 DEBUG: Quality keyword:', qualityKeyword);
+
+        const qualityRelationships = mockFrameKeywords.filter(fk => fk.KeywordName === 'quality');
+        console.log('🔧 DEBUG: Quality relationships:', qualityRelationships);
+
+        const qualityFrameIds = qualityRelationships.map(fk => fk.FrameId);
+        console.log('🔧 DEBUG: Quality frame IDs:', qualityFrameIds);
+
+        // Test the API call directly
+        if (qualityKeyword) {
+            this.getFramesForKeywords({
+                keyword_ids: [qualityKeyword.Id],
+                confidence_min: 0,
+                confidence_max: 1
+            }).then(result => {
+                console.log('🔧 DEBUG: API call result for quality:', result);
+            });
+        }
     }
 };
 
@@ -309,5 +416,17 @@ function delay(ms: number): Promise<void> {
 export {
     mockFrameMetadata,
     mockFrameKeywords,
-    mockBoundingBoxes
+    mockBoundingBoxes,
+    mockKeywords
 };
+
+// Simple test function - remove the call to avoid complexity
+export const testMockData = () => {
+    console.log('🧪 TEST: Quality keyword has', mockFrameKeywords.filter(fk => fk.KeywordName === 'quality').length, 'frames');
+
+    // Run debug test
+    mockApiClient.debugQualityKeyword();
+};
+
+// Call test function to debug
+testMockData();

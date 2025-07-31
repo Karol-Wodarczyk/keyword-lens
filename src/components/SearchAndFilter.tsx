@@ -7,12 +7,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { 
-  Search, 
-  ChevronDown, 
-  Pencil, 
-  Check, 
-  X, 
+import {
+  Search,
+  ChevronDown,
+  Pencil,
+  Check,
+  X,
   Calendar as CalendarIcon,
   Bot,
   Tag,
@@ -66,10 +66,30 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
   const [showHiddenKeywords, setShowHiddenKeywords] = useState(false);
 
-  const filteredKeywords = keywords.filter(keyword =>
-    keyword.text.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (showHiddenKeywords || !keyword.isHidden)
-  );
+  // Helper function to get occurrence range
+  const getOccurrenceRange = (occ: OccurrenceType): [number, number] => {
+    switch (occ) {
+      case 'high': return [20, Infinity];    // Keywords with 20+ frames
+      case 'medium': return [5, 19];         // Keywords with 5-19 frames
+      case 'low': return [1, 4];             // Keywords with 1-4 frames
+      default: return [0, Infinity];         // All keywords
+    }
+  };
+
+  const [minCount, maxCount] = getOccurrenceRange(occurrence);
+
+  const filteredKeywords = keywords.filter(keyword => {
+    // Filter by search term
+    const matchesSearch = keyword.text.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filter by hidden status
+    const matchesHiddenFilter = showHiddenKeywords || !keyword.isHidden;
+
+    // Filter by occurrence level (imageCount)
+    const matchesOccurrence = keyword.imageCount >= minCount && keyword.imageCount <= maxCount;
+
+    return matchesSearch && matchesHiddenFilter && matchesOccurrence;
+  });
 
   const selectedCount = keywords.filter(k => k.isSelected).length;
   const hiddenCount = keywords.filter(k => k.isHidden).length;
@@ -172,7 +192,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                     <div className="flex items-center gap-2">
                       <Search className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">
-                        {selectedCount > 0 
+                        {selectedCount > 0
                           ? `${selectedCount} keyword${selectedCount > 1 ? 's' : ''} selected`
                           : 'Search and select keywords'
                         }
@@ -279,7 +299,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                             </Badge>
                           </div>
                         </div>
-                        
+
                         {/* Bulk Selection Controls */}
                         {keyword.isSelected && (
                           <div className="px-3 pb-3 border-l-2 border-primary/20 ml-3">
@@ -339,7 +359,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
             {/* Actions Section */}
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={onCreateAIModel}
                 className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-glow hover:shadow-hover transition-glow"
                 disabled={selectedCount === 0}
@@ -347,7 +367,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 <Bot className="mr-2 h-4 w-4" />
                 Create AI Model
               </Button>
-              <Button 
+              <Button
                 onClick={onAnnotateImages}
                 variant="outline"
                 className="border-primary/30 hover:bg-primary/10"
@@ -379,8 +399,8 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                     {filters.dateRange.start && filters.dateRange.end
                       ? `${format(filters.dateRange.start, "MMM dd")} - ${format(filters.dateRange.end, "MMM dd")}`
                       : filters.dateRange.start
-                      ? format(filters.dateRange.start, "MMM dd, yyyy")
-                      : "Pick dates"}
+                        ? format(filters.dateRange.start, "MMM dd, yyyy")
+                        : "Pick dates"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-4" align="start">
@@ -425,7 +445,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Album Size
               </label>
-              <Select 
+              <Select
                 value={getAlbumSizeValue()}
                 onValueChange={handleAlbumSizeChange}
               >
@@ -446,7 +466,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Sort by Date
               </label>
-              <Select value={filters.sortBy} onValueChange={(value: 'newest' | 'oldest') => 
+              <Select value={filters.sortBy} onValueChange={(value: 'newest' | 'oldest') =>
                 onFiltersChange({ ...filters, sortBy: value })
               }>
                 <SelectTrigger className="h-12">
@@ -462,16 +482,16 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             {/* Occurrence Filter */}
             <div className="lg:w-48">
               <label className="text-sm font-medium text-foreground mb-2 block">
-                Occurrence
+                Occurrence ({filteredKeywords.length} keywords)
               </label>
               <Select value={occurrence} onValueChange={onOccurrenceChange}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select occurrence" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="high">High (200+ images)</SelectItem>
-                  <SelectItem value="medium">Medium (100-200 images)</SelectItem>
-                  <SelectItem value="low">Low (≤100 images)</SelectItem>
+                  <SelectItem value="high">High (20+ frames)</SelectItem>
+                  <SelectItem value="medium">Medium (5-19 frames)</SelectItem>
+                  <SelectItem value="low">Low (1-4 frames)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

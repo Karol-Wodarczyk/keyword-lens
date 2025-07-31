@@ -6,7 +6,7 @@ import { useToast } from './use-toast';
 
 // Transform API frame metadata to frontend image item type
 function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: string): ImageItem {
-  const thumbnailUrl = thumbnailBase64 
+  const thumbnailUrl = thumbnailBase64
     ? apiClient.base64ToDataUrl(thumbnailBase64, 'thumbnail')
     : '';
 
@@ -25,7 +25,7 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
     timestamp: new Date(frameMetadata.Timestamp).getTime(),
     isSelected: false,
   };
-}export function useFrames() {
+} export function useFrames() {
   const [frames, setFrames] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +48,13 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
       // Convert string IDs to numbers
       const numericKeywordIds = keywordIds.map(id => parseInt(id, 10));
 
+      console.log('🔍 useFrames: fetchFramesForKeywords called with:', {
+        keywordIds,
+        numericKeywordIds,
+        confidenceMin,
+        confidenceMax
+      });
+
       // Note: confidence parameters are ignored as confidence is not currently used
       const params: FramesForKeywords = {
         keyword_ids: numericKeywordIds,
@@ -56,6 +63,11 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
       };
 
       const frameIdsResponse = await apiClient.getFramesForKeywords(params);
+
+      console.log('🔍 useFrames: API response:', {
+        frameIdsCount: frameIdsResponse.values.length,
+        frameIds: frameIdsResponse.values.slice(0, 10)
+      });
 
       // Fetch metadata and thumbnails for each frame
       const framePromises = frameIdsResponse.values.map(async (frameId) => {
@@ -68,6 +80,12 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
       });
 
       const transformedFrames = await Promise.all(framePromises);
+
+      console.log('🔍 useFrames: Transformed frames:', {
+        transformedFramesCount: transformedFrames.length,
+        sampleFrame: transformedFrames[0]
+      });
+
       setFrames(transformedFrames);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch frames';

@@ -55,48 +55,24 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
   const { frames, loading, fetchFramesForKeywords, getFrameImage } = useFrames();
 
-  // Filter keywords based on occurrence (imageCount), then fetch frames
+  // Fetch frames for selected keywords
   useEffect(() => {
     if (selectedKeywords.length === 0) {
       return;
     }
 
-    // Filter keywords based on occurrence level (imageCount)
-    const getOccurrenceRange = (occ: OccurrenceType): [number, number] => {
-      switch (occ) {
-        case 'high': return [50, Infinity];    // Keywords with 50+ frames
-        case 'medium': return [10, 49];        // Keywords with 10-49 frames  
-        case 'low': return [1, 9];             // Keywords with 1-9 frames
-        default: return [0, Infinity];
-      }
-    };
+    const filteredKeywordIds = selectedKeywords.map(k => k.id);
 
-    const [minCount, maxCount] = getOccurrenceRange(occurrence);
-
-    // Filter selected keywords by their occurrence (imageCount)
-    const filteredKeywords = selectedKeywords.filter(keyword =>
-      keyword.imageCount >= minCount && keyword.imageCount <= maxCount
-    );
-
-    if (filteredKeywords.length === 0) {
-      // Call with empty array to clear frames
-      fetchFramesForKeywords([], 0, 1);
-      return;
-    }
-
-    const filteredKeywordIds = filteredKeywords.map(k => k.id);
-
-    console.log('🔍 Fetching frames with:', {
-      occurrence,
-      occurrenceRange: [minCount, maxCount],
-      originalKeywords: selectedKeywords.map(k => ({ text: k.text, count: k.imageCount })),
-      filteredKeywords: filteredKeywords.map(k => ({ text: k.text, count: k.imageCount })),
+    console.log('🔍 Fetching frames for selected keywords:', {
+      selectedKeywords: selectedKeywords.map(k => ({ text: k.text, count: k.imageCount })),
       filteredKeywordIds
     });
 
+    console.log('🔍 SPECIFIC DEBUG: Is quality keyword selected?', selectedKeywords.find(k => k.text === 'quality'));
+
     // Fetch frames without confidence filtering (confidence not used)
     fetchFramesForKeywords(filteredKeywordIds, 0, 1);
-  }, [selectedKeywords, occurrence, fetchFramesForKeywords]);
+  }, [selectedKeywords, fetchFramesForKeywords]);
 
   const handleImageClick = async (image: ImageItem) => {
     try {
@@ -281,11 +257,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     <div className="space-y-6">
       {selectedKeywords.map((keyword) => {
         const albums = getFilteredAlbums(keyword.text);
-        
+
         // The frames array already contains frames that match the selected keywords
         // No need to filter again since fetchFramesForKeywords already did the filtering
         const keywordFrames = frames;
-        
+
         console.log(`🖼️ Displaying frames for keyword "${keyword.text}":`, {
           totalFramesFromAPI: frames.length,
           keywordFramesCount: keywordFrames.length,
