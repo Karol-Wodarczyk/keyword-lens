@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
 import { SearchAndFilter } from './SearchAndFilter';
 import { ImageContent } from './ImageContent';
-import { Keyword, FilterState, BulkSelectionState } from '../types/keyword';
+import { FilterState, BulkSelectionState } from '../types/keyword';
 import { useToast } from '@/hooks/use-toast';
-
-const mockKeywords: Keyword[] = [
-  { id: '1', text: 'landscape', imageCount: 245, isSelected: false },
-  { id: '2', text: 'portrait', imageCount: 189, isSelected: false },
-  { id: '3', text: 'nature', imageCount: 156, isSelected: false },
-  { id: '4', text: 'urban', imageCount: 89, isSelected: false },
-  { id: '5', text: 'wildlife', imageCount: 67, isSelected: false },
-  { id: '6', text: 'architecture', imageCount: 134, isSelected: false },
-  { id: '7', text: 'macro', imageCount: 45, isSelected: false },
-  { id: '8', text: 'street', imageCount: 78, isSelected: false },
-  { id: '9', text: 'boxes', imageCount: 78, isSelected: false },
-  { id: '10', text: 'factory', imageCount: 78, isSelected: false },
-];
+import { useKeywords } from '../hooks/useKeywords';
 
 export const DataTab: React.FC = () => {
-  const [keywords, setKeywords] = useState<Keyword[]>(mockKeywords);
+  const { keywords, loading: keywordsLoading, toggleKeyword, editKeyword } = useKeywords();
   const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('high');
   const [filters, setFilters] = useState<FilterState>({
     dateRange: { start: null, end: null },
@@ -32,19 +20,11 @@ export const DataTab: React.FC = () => {
   const { toast } = useToast();
 
   const handleKeywordToggle = (keywordId: string) => {
-    setKeywords(prev => prev.map(keyword => 
-      keyword.id === keywordId 
-        ? { ...keyword, isSelected: !keyword.isSelected }
-        : keyword
-    ));
+    toggleKeyword(keywordId);
   };
 
   const handleKeywordEdit = (keywordId: string, newText: string) => {
-    setKeywords(prev => prev.map(keyword => 
-      keyword.id === keywordId 
-        ? { ...keyword, text: newText }
-        : keyword
-    ));
+    editKeyword(keywordId, newText);
   };
 
   const handleBulkSelectAll = (keywordId: string, type: 'images' | 'albums') => {
@@ -135,7 +115,7 @@ export const DataTab: React.FC = () => {
           selectedKeywords={selectedKeywords}
           occurrence={occurrence}
           keywords={keywords}
-          onKeywordUpdate={setKeywords}
+          onKeywordUpdate={() => {}} // No longer needed since keywords are managed by useKeywords hook
         />
       </div>
     </div>

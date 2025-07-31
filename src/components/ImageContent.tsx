@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Images, FolderOpen } from 'lucide-react';
-import { Keyword, Album, ImageItem } from '../types/keyword';
+import { ChevronDown, Images, FolderOpen, Loader2 } from 'lucide-react';
+import { Keyword, Album, ImageItem, OccurrenceType } from '../types/keyword';
 import { ImageViewer } from './ImageViewer';
+import { useFrames } from '../hooks/useFrames';
 
 interface ImageContentProps {
   selectedKeywords: Keyword[];
-  occurrence: string;
+  occurrence: OccurrenceType;
   keywords: Keyword[];
   onKeywordUpdate: (keywords: Keyword[]) => void;
 }
 
-// Mock data with real image URLs
+// Mock data for albums (keeping albums as mock for now)
 const mockAlbums: Album[] = [
   {
     id: '1',
@@ -42,111 +43,51 @@ const mockAlbums: Album[] = [
   }
 ];
 
-const mockImages: ImageItem[] = [
-  {
-    id: '1',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['landscape', 'nature'],
-    title: 'Woman with Laptop',
-    albumId: '1',
-    timestamp: Date.now() - 86400000 * 1 // 1 day ago
-  },
-  {
-    id: '2',
-    url: 'https://previews.123rf.com/images/mrgao/mrgao1804/mrgao180400011/99281835-cardboard-box-on-conveyor-belt-3d-illustration-on-white-background.jpg',
-    thumbnailUrl: 'https://previews.123rf.com/images/mrgao/mrgao1804/mrgao180400011/99281835-cardboard-box-on-conveyor-belt-3d-illustration-on-white-background.jpg',
-    keywords: ['boxes', 'factory'],
-    title: 'Gray Laptop Computer',
-    albumId: '1',
-    timestamp: Date.now() - 86400000 * 3 // 3 days ago
-  },
-  {
-    id: '3',
-    url: 'https://c7.alamy.com/comp/2WRX871/a-large-group-of-differently-sized-neutral-cardboard-boxes-on-a-conveyor-belt-consumerism-or-mail-order-concept-2WRX871.jpg',
-    thumbnailUrl: 'https://c7.alamy.com/comp/2WRX871/a-large-group-of-differently-sized-neutral-cardboard-boxes-on-a-conveyor-belt-consumerism-or-mail-order-concept-2WRX871.jpg',
-    keywords: ['boxes', 'factory'],
-    title: 'Circuit Board Macro',
-    albumId: '3',
-    timestamp: Date.now() - 86400000 * 7 // 7 days ago
-  },
-  {
-    id: '4',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['urban', 'architecture'],
-    title: 'Java Programming Monitor',
-    albumId: '2',
-    timestamp: Date.now() - 86400000 * 4 // 4 days ago
-  },
-  {
-    id: '5',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['nature', 'wildlife'],
-    title: 'MacBook Pro User',
-    albumId: '1',
-    timestamp: Date.now() - 86400000 * 6 // 6 days ago
-  },
-  {
-    id: '6',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['street', 'urban'],
-    title: 'Woman with Black Laptop',
-    albumId: '2',
-    timestamp: Date.now() - 86400000 * 8 // 8 days ago
-  },
-  {
-    id: '7',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['urban', 'architecture'],
-    title: 'White Robot',
-    albumId: '2',
-    timestamp: Date.now() - 86400000 * 9 // 9 days ago
-  },
-  {
-    id: '8',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['portrait'],
-    title: 'Matrix Movie Still',
-    albumId: '3',
-    timestamp: Date.now() - 86400000 * 5 // 5 days ago
-  },
-  {
-    id: '9',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['landscape', 'nature'],
-    title: 'Gray and Black Laptop',
-    albumId: '1',
-    timestamp: Date.now() - 86400000 * 12 // 12 days ago
-  },
-  {
-    id: '10',
-    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
-    keywords: ['street', 'urban'],
-    title: 'Colorful Code Monitor',
-    albumId: '2',
-    timestamp: Date.now() - 86400000 * 11 // 11 days ago
-  }
-];
-
 export const ImageContent: React.FC<ImageContentProps> = ({
   selectedKeywords,
+  occurrence,
   keywords,
   onKeywordUpdate,
 }) => {
   const [viewerImage, setViewerImage] = useState<ImageItem | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  
+  const { frames, loading, fetchFramesForKeywords, getFrameImage } = useFrames();
 
-  const handleImageClick = (image: ImageItem) => {
-    setViewerImage(image);
-    setViewerOpen(true);
+  // Fetch frames based on selected keywords and occurrence
+  useEffect(() => {
+    if (selectedKeywords.length === 0) {
+      return;
+    }
+
+    const getConfidenceRange = (occ: OccurrenceType): [number, number] => {
+      switch (occ) {
+        case 'high': return [0.8, 1.0];
+        case 'medium': return [0.4, 0.8];
+        case 'low': return [0.1, 0.4];
+        default: return [0.0, 1.0];
+      }
+    };
+
+    const [confidenceMin, confidenceMax] = getConfidenceRange(occurrence);
+    const selectedKeywordIds = selectedKeywords.map(k => k.id);
+
+    fetchFramesForKeywords(selectedKeywordIds, confidenceMin, confidenceMax);
+  }, [selectedKeywords, occurrence, fetchFramesForKeywords]);
+
+  const handleImageClick = async (image: ImageItem) => {
+    try {
+      // Load the full image if not already loaded
+      if (!image.url) {
+        const fullImageUrl = await getFrameImage(image.id);
+        image.url = fullImageUrl;
+      }
+      setViewerImage(image);
+      setViewerOpen(true);
+    } catch (error) {
+      console.error('Failed to load image:', error);
+    }
   };
 
   const handleAlbumClick = (album: Album) => {
@@ -157,52 +98,46 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     setSelectedAlbum(null);
   };
 
-
   const handleKeywordHide = (imageId: string, keywordText: string) => {
-    // Remove keyword from the specific image
-    const imageIndex = mockImages.findIndex(img => img.id === imageId);
-    if (imageIndex !== -1) {
-      mockImages[imageIndex].keywords = mockImages[imageIndex].keywords.filter(k => k !== keywordText);
-    }
-    
-    // Update keyword count in keywords list
-    const updatedKeywords = keywords.map(keyword => {
-      if (keyword.text === keywordText) {
-        return { ...keyword, imageCount: Math.max(0, keyword.imageCount - 1) };
-      }
-      return keyword;
-    });
-    onKeywordUpdate(updatedKeywords);
+    // For now, just update local state - would need backend endpoint
+    console.log('Hide keyword:', keywordText, 'from image:', imageId);
   };
 
   const handleKeywordRename = (imageId: string, oldKeyword: string, newKeyword: string) => {
-    // Update keyword in the specific image
-    const imageIndex = mockImages.findIndex(img => img.id === imageId);
-    if (imageIndex !== -1) {
-      const keywordIndex = mockImages[imageIndex].keywords.findIndex(k => k === oldKeyword);
-      if (keywordIndex !== -1) {
-        mockImages[imageIndex].keywords[keywordIndex] = newKeyword;
-      }
-    }
-    
-    // Update keywords list
-    const updatedKeywords = keywords.map(keyword => {
-      if (keyword.text === oldKeyword) {
-        return { ...keyword, text: newKeyword };
-      }
-      return keyword;
-    });
-    onKeywordUpdate(updatedKeywords);
-    
-    // Update viewer image if it's currently displayed
-    if (viewerImage && viewerImage.id === imageId) {
-      const updatedViewerImage = {
-        ...viewerImage,
-        keywords: viewerImage.keywords.map(k => k === oldKeyword ? newKeyword : k)
-      };
-      setViewerImage(updatedViewerImage);
-    }
+    // For now, just update local state - would need backend endpoint
+    console.log('Rename keyword:', oldKeyword, 'to:', newKeyword, 'for image:', imageId);
   };
+
+  const getFilteredAlbums = (keyword: string) => {
+    return mockAlbums.filter(album => 
+      album.keywords.some(k => k.toLowerCase().includes(keyword.toLowerCase()))
+    );
+  };
+
+  const getAlbumImages = (albumId: string) => {
+    // Would need to fetch album images from backend
+    return frames.slice(0, 6); // Mock implementation
+  };
+
+  // Show loading state
+  if (loading && selectedKeywords.length > 0) {
+    return (
+      <Card className="p-12 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+        <div className="relative z-10">
+          <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Loading Frames...
+          </h3>
+          <p className="text-muted-foreground">
+            Fetching frames from the backend for selected keywords
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Show empty state when no keywords selected
   if (selectedKeywords.length === 0) {
     return (
       <Card className="p-12 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
@@ -213,28 +148,31 @@ export const ImageContent: React.FC<ImageContentProps> = ({
             No Keywords Selected
           </h3>
           <p className="text-muted-foreground">
-            Select keywords from the filter above to view related albums and images
+            Select keywords from the filter above to view related frames and albums
           </p>
         </div>
       </Card>
     );
   }
 
-  const getFilteredAlbums = (keyword: string) => {
-    return mockAlbums.filter(album => 
-      album.keywords.some(k => k.toLowerCase().includes(keyword.toLowerCase()))
+  // Show no results state
+  if (frames.length === 0 && selectedKeywords.length > 0 && !loading) {
+    return (
+      <Card className="p-12 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+        <div className="relative z-10">
+          <Images className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Frames Found
+          </h3>
+          <p className="text-muted-foreground">
+            No frames match the selected keywords with the current occurrence level ({occurrence}).
+            Try adjusting the occurrence level or selecting different keywords.
+          </p>
+        </div>
+      </Card>
     );
-  };
-
-  const getFilteredImages = (keyword: string) => {
-    return mockImages.filter(image => 
-      image.keywords.some(k => k.toLowerCase().includes(keyword.toLowerCase()))
-    );
-  };
-
-  const getAlbumImages = (albumId: string) => {
-    return mockImages.filter(image => image.albumId === albumId);
-  };
+  }
 
   // If an album is selected, show album view
   if (selectedAlbum) {
@@ -321,7 +259,9 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     <div className="space-y-6">
       {selectedKeywords.map((keyword) => {
         const albums = getFilteredAlbums(keyword.text);
-        const images = getFilteredImages(keyword.text);
+        const keywordFrames = frames.filter(frame => 
+          frame.keywords.some(k => k.toLowerCase().includes(keyword.text.toLowerCase()))
+        );
 
         return (
           <Collapsible key={keyword.id} defaultOpen>
@@ -332,10 +272,10 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="h-3 w-3 rounded-full bg-gradient-primary shadow-glow animate-glow-pulse"></div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      Images tagged with "{keyword.text}"
+                      Frames tagged with "{keyword.text}"
                     </h3>
                     <Badge variant="secondary" className="ml-2 bg-secondary/80 backdrop-blur-sm border border-primary/20">
-                      {albums.length + images.length} items
+                      {albums.length + keywordFrames.length} items
                     </Badge>
                   </div>
                   <ChevronDown className="h-5 w-5 text-primary transition-all duration-300 data-[state=open]:rotate-180 group-hover:text-primary-glow" />
@@ -379,8 +319,8 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                  <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
                                    {kw}
                                  </Badge>
-                               ))}
-                             </div>
+                                ))}
+                              </div>
                            </div>
                          </div>
                        </Card>
@@ -389,16 +329,16 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                 </div>
               )}
 
-              {/* Individual Images Section */}
-              {images.length > 0 && (
+              {/* Individual Frames Section */}
+              {keywordFrames.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Images className="h-5 w-5 text-primary" />
-                    <h4 className="font-medium text-foreground">Individual Images</h4>
-                    <Badge variant="outline">{images.length}</Badge>
+                    <h4 className="font-medium text-foreground">Frames</h4>
+                    <Badge variant="outline">{keywordFrames.length}</Badge>
                   </div>
                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                     {images.map((image) => (
+                     {keywordFrames.map((image) => (
                        <Card 
                          key={image.id} 
                          className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
@@ -428,25 +368,13 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                        </Card>
                      ))}
                    </div>
-                 </div>
-               )}
-
-               {albums.length === 0 && images.length === 0 && (
-                 <Card className="p-8 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-                   <div className="relative z-10">
-                     <Images className="h-12 w-12 text-primary mx-auto mb-3 animate-glow-pulse" />
-                     <p className="text-muted-foreground">
-                       No albums or images found for "{keyword.text}"
-                     </p>
-                   </div>
-                 </Card>
-               )}
+                </div>
+              )}
             </CollapsibleContent>
           </Collapsible>
         );
       })}
-      
+
       {/* Image Viewer Dialog */}
       <ImageViewer
         image={viewerImage}
