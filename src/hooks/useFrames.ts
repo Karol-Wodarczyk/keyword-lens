@@ -5,7 +5,7 @@ import { useToast } from './use-toast';
 
 // Transform API frame metadata to frontend image item type
 function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: string): ImageItem {
-  const thumbnailUrl = thumbnailBase64 
+  const thumbnailUrl = thumbnailBase64
     ? apiClient.base64ToDataUrl(thumbnailBase64, 'thumbnail')
     : '';
 
@@ -27,8 +27,8 @@ export function useFrames() {
   const { toast } = useToast();
 
   const fetchFramesForKeywords = async (
-    keywordIds: string[], 
-    confidenceMin: number = 0, 
+    keywordIds: string[],
+    confidenceMin: number = 0,
     confidenceMax: number = 1
   ) => {
     if (keywordIds.length === 0) {
@@ -38,26 +38,27 @@ export function useFrames() {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       // Convert string IDs to numbers
       const numericKeywordIds = keywordIds.map(id => parseInt(id, 10));
-      
+
+      // Note: confidence parameters are ignored as confidence is not currently used
       const params: FramesForKeywords = {
         keyword_ids: numericKeywordIds,
-        confidence_min: confidenceMin,
-        confidence_max: confidenceMax,
+        confidence_min: 0,    // Fixed to 0 since confidence not used
+        confidence_max: 1,    // Fixed to 1 since confidence not used
       };
 
       const frameIdsResponse = await apiClient.getFramesForKeywords(params);
-      
+
       // Fetch metadata and thumbnails for each frame
       const framePromises = frameIdsResponse.values.map(async (frameId) => {
         const [metadata, thumbnail] = await Promise.all([
           apiClient.getFrameMetadata(frameId.toString()),
           apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
         ]);
-        
+
         return transformFrame(metadata, thumbnail.thumbnail);
       });
 
@@ -89,9 +90,9 @@ export function useFrames() {
     try {
       const frameKeywords = await apiClient.getFrameKeywords(frameId);
       const keywordNames = frameKeywords.map(fk => fk.KeywordName);
-      
-      setFrames(prev => prev.map(frame => 
-        frame.id === frameId 
+
+      setFrames(prev => prev.map(frame =>
+        frame.id === frameId
           ? { ...frame, keywords: keywordNames }
           : frame
       ));

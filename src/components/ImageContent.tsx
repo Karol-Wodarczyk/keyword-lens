@@ -52,28 +52,50 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const [viewerImage, setViewerImage] = useState<ImageItem | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-  
+
   const { frames, loading, fetchFramesForKeywords, getFrameImage } = useFrames();
 
-  // Fetch frames based on selected keywords and occurrence
+  // Filter keywords based on occurrence (imageCount), then fetch frames
   useEffect(() => {
     if (selectedKeywords.length === 0) {
       return;
     }
 
-    const getConfidenceRange = (occ: OccurrenceType): [number, number] => {
+    // Filter keywords based on occurrence level (imageCount)
+    const getOccurrenceRange = (occ: OccurrenceType): [number, number] => {
       switch (occ) {
-        case 'high': return [0.8, 1.0];
-        case 'medium': return [0.4, 0.8];
-        case 'low': return [0.1, 0.4];
-        default: return [0.0, 1.0];
+        case 'high': return [50, Infinity];    // Keywords with 50+ frames
+        case 'medium': return [10, 49];        // Keywords with 10-49 frames  
+        case 'low': return [1, 9];             // Keywords with 1-9 frames
+        default: return [0, Infinity];
       }
     };
 
-    const [confidenceMin, confidenceMax] = getConfidenceRange(occurrence);
-    const selectedKeywordIds = selectedKeywords.map(k => k.id);
+    const [minCount, maxCount] = getOccurrenceRange(occurrence);
 
-    fetchFramesForKeywords(selectedKeywordIds, confidenceMin, confidenceMax);
+    // Filter selected keywords by their occurrence (imageCount)
+    const filteredKeywords = selectedKeywords.filter(keyword =>
+      keyword.imageCount >= minCount && keyword.imageCount <= maxCount
+    );
+
+    if (filteredKeywords.length === 0) {
+      // Call with empty array to clear frames
+      fetchFramesForKeywords([], 0, 1);
+      return;
+    }
+
+    const filteredKeywordIds = filteredKeywords.map(k => k.id);
+
+    console.log('🔍 Fetching frames with:', {
+      occurrence,
+      occurrenceRange: [minCount, maxCount],
+      originalKeywords: selectedKeywords.map(k => ({ text: k.text, count: k.imageCount })),
+      filteredKeywords: filteredKeywords.map(k => ({ text: k.text, count: k.imageCount })),
+      filteredKeywordIds
+    });
+
+    // Fetch frames without confidence filtering (confidence not used)
+    fetchFramesForKeywords(filteredKeywordIds, 0, 1);
   }, [selectedKeywords, occurrence, fetchFramesForKeywords]);
 
   const handleImageClick = async (image: ImageItem) => {
@@ -109,7 +131,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   };
 
   const getFilteredAlbums = (keyword: string) => {
-    return mockAlbums.filter(album => 
+    return mockAlbums.filter(album =>
       album.keywords.some(k => k.toLowerCase().includes(keyword.toLowerCase()))
     );
   };
@@ -166,8 +188,8 @@ export const ImageContent: React.FC<ImageContentProps> = ({
             No Frames Found
           </h3>
           <p className="text-muted-foreground">
-            No frames match the selected keywords with the current occurrence level ({occurrence}).
-            Try adjusting the occurrence level or selecting different keywords.
+            No frames found for keywords with the current occurrence level ({occurrence}).
+            Try adjusting the occurrence level or selecting keywords with different frame counts.
           </p>
         </div>
       </Card>
@@ -177,7 +199,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   // If an album is selected, show album view
   if (selectedAlbum) {
     const albumImages = getAlbumImages(selectedAlbum.id);
-    
+
     return (
       <div className="space-y-6">
         {/* Album Header */}
@@ -212,15 +234,15 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         {/* Album Images Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {albumImages.map((image) => (
-            <Card 
-              key={image.id} 
+            <Card
+              key={image.id}
               className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
               onClick={() => handleImageClick(image)}
             >
               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
               <div className="aspect-square bg-muted relative overflow-hidden">
-                <img 
-                  src={image.thumbnailUrl} 
+                <img
+                  src={image.thumbnailUrl}
                   alt={image.title}
                   className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
                 />
@@ -259,7 +281,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     <div className="space-y-6">
       {selectedKeywords.map((keyword) => {
         const albums = getFilteredAlbums(keyword.text);
-        const keywordFrames = frames.filter(frame => 
+        const keywordFrames = frames.filter(frame =>
           frame.keywords.some(k => k.toLowerCase().includes(keyword.text.toLowerCase()))
         );
 
@@ -282,7 +304,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                 </div>
               </Card>
             </CollapsibleTrigger>
-            
+
             <CollapsibleContent className="space-y-4 mt-4">
               {/* Albums Section */}
               {albums.length > 0 && (
@@ -292,40 +314,40 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <h4 className="font-medium text-foreground">Albums</h4>
                     <Badge variant="outline">{albums.length}</Badge>
                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                     {albums.map((album) => (
-                       <Card 
-                         key={album.id} 
-                         className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-                         onClick={() => handleAlbumClick(album)}
-                       >
-                         <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
-                         <div className="aspect-video bg-muted relative overflow-hidden">
-                           <img 
-                             src={album.thumbnailUrl} 
-                             alt={album.name}
-                             className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
-                           />
-                           <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                         </div>
-                         <div className="p-4 relative z-10">
-                           <h5 className="font-medium text-foreground mb-2 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
-                             {album.name}
-                           </h5>
-                           <div className="flex items-center justify-between text-sm text-muted-foreground">
-                             <span>{album.imageCount} images</span>
-                             <div className="flex gap-1">
-                               {album.keywords.slice(0, 2).map((kw, idx) => (
-                                 <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
-                                   {kw}
-                                 </Badge>
-                                ))}
-                              </div>
-                           </div>
-                         </div>
-                       </Card>
-                     ))}
-                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {albums.map((album) => (
+                      <Card
+                        key={album.id}
+                        className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
+                        onClick={() => handleAlbumClick(album)}
+                      >
+                        <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+                        <div className="aspect-video bg-muted relative overflow-hidden">
+                          <img
+                            src={album.thumbnailUrl}
+                            alt={album.name}
+                            className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div className="p-4 relative z-10">
+                          <h5 className="font-medium text-foreground mb-2 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
+                            {album.name}
+                          </h5>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <span>{album.imageCount} images</span>
+                            <div className="flex gap-1">
+                              {album.keywords.slice(0, 2).map((kw, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
+                                  {kw}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -337,37 +359,37 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <h4 className="font-medium text-foreground">Frames</h4>
                     <Badge variant="outline">{keywordFrames.length}</Badge>
                   </div>
-                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                     {keywordFrames.map((image) => (
-                       <Card 
-                         key={image.id} 
-                         className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-                         onClick={() => handleImageClick(image)}
-                       >
-                         <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
-                         <div className="aspect-square bg-muted relative overflow-hidden">
-                           <img 
-                             src={image.thumbnailUrl} 
-                             alt={image.title}
-                             className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
-                           />
-                           <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                         </div>
-                         <div className="p-3 relative z-10">
-                           <h6 className="text-sm font-medium text-foreground mb-1 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
-                             {image.title}
-                           </h6>
-                           <div className="flex flex-wrap gap-1">
-                             {image.keywords.slice(0, 2).map((kw, idx) => (
-                               <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
-                                 {kw}
-                               </Badge>
-                             ))}
-                           </div>
-                         </div>
-                       </Card>
-                     ))}
-                   </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    {keywordFrames.map((image) => (
+                      <Card
+                        key={image.id}
+                        className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
+                        onClick={() => handleImageClick(image)}
+                      >
+                        <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+                        <div className="aspect-square bg-muted relative overflow-hidden">
+                          <img
+                            src={image.thumbnailUrl}
+                            alt={image.title}
+                            className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div className="p-3 relative z-10">
+                          <h6 className="text-sm font-medium text-foreground mb-1 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
+                            {image.title}
+                          </h6>
+                          <div className="flex flex-wrap gap-1">
+                            {image.keywords.slice(0, 2).map((kw, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
+                                {kw}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
             </CollapsibleContent>

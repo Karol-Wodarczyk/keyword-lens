@@ -7,7 +7,7 @@ import { useKeywords } from '../hooks/useKeywords';
 
 export const DataTab: React.FC = () => {
   const { keywords, loading: keywordsLoading, toggleKeyword, editKeyword } = useKeywords();
-  const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('high');
+  const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('low');
   const [filters, setFilters] = useState<FilterState>({
     dateRange: { start: null, end: null },
     albumSizeRange: { min: 0, max: 1000 },
@@ -29,8 +29,8 @@ export const DataTab: React.FC = () => {
 
   const handleBulkSelectAll = (keywordId: string, type: 'images' | 'albums') => {
     // Mock implementation - in real app, would fetch actual items for the keyword
-    const mockIds = Array.from({length: 10}, (_, i) => `${type}-${keywordId}-${i}`);
-    
+    const mockIds = Array.from({ length: 10 }, (_, i) => `${type}-${keywordId}-${i}`);
+
     setBulkSelection(prev => ({
       ...prev,
       [type === 'images' ? 'selectedImages' : 'selectedAlbums']: [
@@ -80,7 +80,7 @@ export const DataTab: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-glow opacity-30 pointer-events-none"></div>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-      
+
       <div className="max-w-7xl mx-auto space-y-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
@@ -111,11 +111,11 @@ export const DataTab: React.FC = () => {
         />
 
         {/* Image Content Section */}
-        <ImageContent 
+        <ImageContent
           selectedKeywords={selectedKeywords}
           occurrence={occurrence}
           keywords={keywords}
-          onKeywordUpdate={() => {}} // No longer needed since keywords are managed by useKeywords hook
+          onKeywordUpdate={() => { }} // No longer needed since keywords are managed by useKeywords hook
         />
       </div>
     </div>
