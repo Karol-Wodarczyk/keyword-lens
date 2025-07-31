@@ -64,9 +64,9 @@ class ApiError extends Error {
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   console.log(`🔗 API Request: ${options.method || 'GET'} ${url}`);
-  
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -92,12 +92,12 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     if (error instanceof ApiError) {
       throw error;
     }
-    
+
     // Check for common CORS/network issues
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
       throw new ApiError(0, `🚫 CORS or Network error: Cannot connect to ${url}. Is the backend server running?`);
     }
-    
+
     throw new ApiError(0, `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
