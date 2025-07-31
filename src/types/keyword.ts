@@ -19,6 +19,7 @@ export interface ImageItem {
   thumbnailUrl: string;
   keywords: string[];
   title: string;
+  albumId?: string;
 }
 
 export type OccurrenceType = 'high' | 'medium' | 'low';

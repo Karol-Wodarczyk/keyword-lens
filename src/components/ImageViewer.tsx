@@ -61,9 +61,11 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         <div className="space-y-6">
           {/* Image Display */}
           <div className="relative bg-muted rounded-lg overflow-hidden shadow-glow">
-            <div className="aspect-video w-full bg-gradient-subtle flex items-center justify-center">
-              <div className="text-primary text-lg">Image Preview: {image.title}</div>
-            </div>
+            <img 
+              src={image.url} 
+              alt={image.title}
+              className="w-full h-auto max-h-[60vh] object-contain"
+            />
           </div>
 
           {/* Keywords Management */}
