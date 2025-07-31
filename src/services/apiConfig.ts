@@ -4,7 +4,7 @@ import { mockApiClient } from './mockApi';
 
 // 🎛️ CONFIGURATION: Change this to switch between mock and real API
 // Can be controlled via environment variable VITE_USE_MOCK_API
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true' || true; // Default to true for development
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 // Export the appropriate API client based on configuration
 export const apiClient = USE_MOCK_API ? mockApiClient : realApiClient;
