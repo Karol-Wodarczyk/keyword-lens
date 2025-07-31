@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Images, FolderOpen } from 'lucide-react';
 import { Keyword, Album, ImageItem } from '../types/keyword';
+import { ImageViewer } from './ImageViewer';
 
 interface ImageContentProps {
   selectedKeywords: Keyword[];
   occurrence: string;
+  keywords: Keyword[];
+  onKeywordUpdate: (keywords: Keyword[]) => void;
 }
 
 // Mock data
@@ -82,7 +85,62 @@ const mockImages: ImageItem[] = [
 
 export const ImageContent: React.FC<ImageContentProps> = ({
   selectedKeywords,
+  keywords,
+  onKeywordUpdate,
 }) => {
+  const [viewerImage, setViewerImage] = useState<ImageItem | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  const handleImageClick = (image: ImageItem) => {
+    setViewerImage(image);
+    setViewerOpen(true);
+  };
+
+  const handleKeywordHide = (imageId: string, keywordText: string) => {
+    // Remove keyword from the specific image
+    const imageIndex = mockImages.findIndex(img => img.id === imageId);
+    if (imageIndex !== -1) {
+      mockImages[imageIndex].keywords = mockImages[imageIndex].keywords.filter(k => k !== keywordText);
+    }
+    
+    // Update keyword count in keywords list
+    const updatedKeywords = keywords.map(keyword => {
+      if (keyword.text === keywordText) {
+        return { ...keyword, imageCount: Math.max(0, keyword.imageCount - 1) };
+      }
+      return keyword;
+    });
+    onKeywordUpdate(updatedKeywords);
+  };
+
+  const handleKeywordRename = (imageId: string, oldKeyword: string, newKeyword: string) => {
+    // Update keyword in the specific image
+    const imageIndex = mockImages.findIndex(img => img.id === imageId);
+    if (imageIndex !== -1) {
+      const keywordIndex = mockImages[imageIndex].keywords.findIndex(k => k === oldKeyword);
+      if (keywordIndex !== -1) {
+        mockImages[imageIndex].keywords[keywordIndex] = newKeyword;
+      }
+    }
+    
+    // Update keywords list
+    const updatedKeywords = keywords.map(keyword => {
+      if (keyword.text === oldKeyword) {
+        return { ...keyword, text: newKeyword };
+      }
+      return keyword;
+    });
+    onKeywordUpdate(updatedKeywords);
+    
+    // Update viewer image if it's currently displayed
+    if (viewerImage && viewerImage.id === imageId) {
+      const updatedViewerImage = {
+        ...viewerImage,
+        keywords: viewerImage.keywords.map(k => k === oldKeyword ? newKeyword : k)
+      };
+      setViewerImage(updatedViewerImage);
+    }
+  };
   if (selectedKeywords.length === 0) {
     return (
       <Card className="p-12 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
@@ -188,7 +246,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                   </div>
                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                      {images.map((image) => (
-                       <Card key={image.id} className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative">
+                       <Card 
+                         key={image.id} 
+                         className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
+                         onClick={() => handleImageClick(image)}
+                       >
                          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
                          <div className="aspect-square bg-muted relative overflow-hidden">
                            <div className="w-full h-full bg-gradient-subtle flex items-center justify-center relative z-10">
@@ -229,6 +291,16 @@ export const ImageContent: React.FC<ImageContentProps> = ({
           </Collapsible>
         );
       })}
+      
+      {/* Image Viewer Dialog */}
+      <ImageViewer
+        image={viewerImage}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        onKeywordHide={handleKeywordHide}
+        onKeywordRename={handleKeywordRename}
+        allKeywords={keywords}
+      />
     </div>
   );
 };

@@ -68,6 +68,8 @@ export const DataTab: React.FC = () => {
         <ImageContent 
           selectedKeywords={selectedKeywords}
           occurrence={occurrence}
+          keywords={keywords}
+          onKeywordUpdate={setKeywords}
         />
       </div>
     </div>
