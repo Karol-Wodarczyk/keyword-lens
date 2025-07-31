@@ -11,6 +11,7 @@ function transformKeyword(apiKeyword: KeywordDto): Keyword {
     text: apiKeyword.Name,
     imageCount: apiKeyword.Count,
     isSelected: false,
+    isHidden: false,
   };
 }
 
@@ -57,6 +58,14 @@ export function useKeywords() {
     ));
   };
 
+  const toggleKeywordVisibility = (keywordId: string) => {
+    setKeywords(prev => prev.map(keyword =>
+      keyword.id === keywordId
+        ? { ...keyword, isHidden: !keyword.isHidden }
+        : keyword
+    ));
+  };
+
   useEffect(() => {
     fetchKeywords();
   }, [fetchKeywords]);
@@ -67,6 +76,7 @@ export function useKeywords() {
     error,
     toggleKeyword,
     editKeyword,
+    toggleKeywordVisibility,
     refetch: fetchKeywords,
   };
 }

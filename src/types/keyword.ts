@@ -3,6 +3,7 @@ export interface Keyword {
   text: string;
   imageCount: number;
   isSelected: boolean;
+  isHidden: boolean;
 }
 
 export interface Album {

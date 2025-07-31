@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useKeywords } from '../hooks/useKeywords';
 
 export const DataTab: React.FC = () => {
-  const { keywords, loading: keywordsLoading, toggleKeyword, editKeyword } = useKeywords();
+  const { keywords, loading: keywordsLoading, toggleKeyword, editKeyword, toggleKeywordVisibility } = useKeywords();
   const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('low');
   const [filters, setFilters] = useState<FilterState>({
     dateRange: { start: null, end: null },
@@ -26,6 +26,10 @@ export const DataTab: React.FC = () => {
 
   const handleKeywordEdit = (keywordId: string, newText: string) => {
     editKeyword(keywordId, newText);
+  };
+
+  const handleKeywordVisibilityToggle = (keywordId: string) => {
+    toggleKeywordVisibility(keywordId);
   };
 
   const handleBulkSelectAll = (keywordId: string, type: 'images' | 'albums') => {
@@ -105,6 +109,7 @@ export const DataTab: React.FC = () => {
           bulkSelection={bulkSelection}
           onKeywordToggle={handleKeywordToggle}
           onKeywordEdit={handleKeywordEdit}
+          onKeywordVisibilityToggle={handleKeywordVisibilityToggle}
           onOccurrenceChange={setOccurrence}
           onFiltersChange={setFilters}
           onBulkSelectionChange={setBulkSelection}

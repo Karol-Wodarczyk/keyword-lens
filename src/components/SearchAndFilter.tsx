@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Separator } from '@/components/ui/separator';
 import { 
   Search, 
   ChevronDown, 
@@ -15,13 +14,13 @@ import {
   Check, 
   X, 
   Calendar as CalendarIcon,
-  Filter,
-  SortDesc,
   Bot,
   Tag,
   CheckSquare,
   Square,
-  Minus
+  Minus,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Keyword, OccurrenceType, FilterState, BulkSelectionState } from '../types/keyword';
 import { format } from 'date-fns';
@@ -34,6 +33,7 @@ interface SearchAndFilterProps {
   bulkSelection: BulkSelectionState;
   onKeywordToggle: (keywordId: string) => void;
   onKeywordEdit: (keywordId: string, newText: string) => void;
+  onKeywordVisibilityToggle: (keywordId: string) => void;
   onOccurrenceChange: (occurrence: OccurrenceType) => void;
   onFiltersChange: (filters: FilterState) => void;
   onBulkSelectionChange: (selection: BulkSelectionState) => void;
@@ -50,6 +50,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   bulkSelection,
   onKeywordToggle,
   onKeywordEdit,
+  onKeywordVisibilityToggle,
   onOccurrenceChange,
   onFiltersChange,
   onBulkSelectionChange,
@@ -63,9 +64,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   const [editText, setEditText] = useState('');
   const [isKeywordOpen, setIsKeywordOpen] = useState(false);
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+  const [showHiddenKeywords, setShowHiddenKeywords] = useState(false);
 
   const filteredKeywords = keywords.filter(keyword =>
-    keyword.text.toLowerCase().includes(searchTerm.toLowerCase())
+    keyword.text.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (showHiddenKeywords || !keyword.isHidden)
   );
 
   const selectedCount = keywords.filter(k => k.isSelected).length;
@@ -98,14 +101,17 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     });
   };
 
-  const handleAlbumSizeChange = (field: 'min' | 'max', value: string) => {
-    const numValue = parseInt(value) || 0;
+  const handleAlbumSizeChange = (value: string) => {
+    const sizes = {
+      'small': { min: 1, max: 50 },
+      'medium': { min: 51, max: 200 },
+      'large': { min: 201, max: 1000 },
+      'all': { min: 0, max: 1000 }
+    };
+    const selectedSize = sizes[value as keyof typeof sizes] || sizes.all;
     onFiltersChange({
       ...filters,
-      albumSizeRange: {
-        ...filters.albumSizeRange,
-        [field]: numValue
-      }
+      albumSizeRange: selectedSize
     });
   };
 
@@ -114,7 +120,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     if (!keywordData) return <Square className="h-4 w-4" />;
 
     const selectedIds = type === 'images' ? bulkSelection.selectedImages : bulkSelection.selectedAlbums;
-    const totalCount = keywordData.imageCount; // This would need to be split for actual images vs albums
+    const totalCount = keywordData.imageCount;
     const selectedCount = selectedIds.length;
 
     if (selectedCount === 0) return <Square className="h-4 w-4" />;
@@ -134,13 +140,23 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     return 'bg-red-100 text-red-800';
   };
 
+  const getAlbumSizeValue = () => {
+    const { min, max } = filters.albumSizeRange;
+    if (min === 0 && max === 1000) return 'all';
+    if (min === 1 && max === 50) return 'small';
+    if (min === 51 && max === 200) return 'medium';
+    if (min === 201 && max === 1000) return 'large';
+    return 'all';
+  };
+
   return (
     <div className="space-y-6">
       {/* Main Search and Filter Card */}
       <Card className="p-6 shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden animate-scale-in">
         <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
         <div className="relative z-10">
-          <div className="flex flex-col xl:flex-row gap-6">
+          {/* Top Row: Search, Filter, and Actions */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-6">
             {/* Keywords Section */}
             <div className="flex-1">
               <label className="text-sm font-medium text-foreground mb-2 block">
@@ -166,12 +182,25 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 </PopoverTrigger>
                 <PopoverContent className="w-96 p-0" align="start">
                   <div className="p-4 border-b">
-                    <Input
-                      placeholder="Search keywords..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                    />
+                    <div className="space-y-3">
+                      <Input
+                        placeholder="Search keywords..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowHiddenKeywords(!showHiddenKeywords)}
+                          className="gap-2"
+                        >
+                          {showHiddenKeywords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showHiddenKeywords ? 'Hide Hidden Keywords' : 'Show Hidden Keywords'}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {filteredKeywords.map((keyword) => (
@@ -212,12 +241,23 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                                 </Button>
                               </div>
                             ) : (
-                              <span className="font-medium text-sm flex-1">
+                              <span className={cn(
+                                "font-medium text-sm flex-1",
+                                keyword.isHidden && "opacity-50 line-through"
+                              )}>
                                 {keyword.text}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 ml-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onKeywordVisibilityToggle(keyword.id)}
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              {keyword.isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            </Button>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -295,123 +335,143 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               </Popover>
             </div>
 
-            {/* Filters Section */}
-            <div className="flex flex-col lg:flex-row gap-4 lg:w-auto">
-              {/* Date Range Filter */}
-              <div className="lg:w-48">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Date Range
-                </label>
-                <Popover open={isDateRangeOpen} onOpenChange={setIsDateRangeOpen}>
-                  <PopoverTrigger asChild>
+            {/* Actions Section */}
+            <div className="flex gap-3">
+              <Button 
+                onClick={onCreateAIModel}
+                className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-glow hover:shadow-hover transition-glow"
+                disabled={selectedCount === 0}
+              >
+                <Bot className="mr-2 h-4 w-4" />
+                Create AI Model
+              </Button>
+              <Button 
+                onClick={onAnnotateImages}
+                variant="outline"
+                className="border-primary/30 hover:bg-primary/10"
+                disabled={selectedCount === 0}
+              >
+                <Tag className="mr-2 h-4 w-4" />
+                Annotate Images
+              </Button>
+            </div>
+          </div>
+
+          {/* Second Row: Filters Section */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Date Range Filter */}
+            <div className="lg:w-48">
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Date Range
+              </label>
+              <Popover open={isDateRangeOpen} onOpenChange={setIsDateRangeOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-12",
+                      !filters.dateRange.start && !filters.dateRange.end && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.dateRange.start && filters.dateRange.end
+                      ? `${format(filters.dateRange.start, "MMM dd")} - ${format(filters.dateRange.end, "MMM dd")}`
+                      : filters.dateRange.start
+                      ? format(filters.dateRange.start, "MMM dd, yyyy")
+                      : "Pick dates"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-4" align="start">
+                  <div className="flex gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Start Date</label>
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateRange.start || undefined}
+                        onSelect={(date) => handleDateRangeChange('start', date)}
+                        className="rounded-md border pointer-events-auto"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">End Date</label>
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateRange.end || undefined}
+                        onSelect={(date) => handleDateRangeChange('end', date)}
+                        className="rounded-md border pointer-events-auto"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
                     <Button
                       variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-12",
-                        !filters.dateRange.start && !filters.dateRange.end && "text-muted-foreground"
-                      )}
+                      onClick={() => onFiltersChange({
+                        ...filters,
+                        dateRange: { start: null, end: null }
+                      })}
+                      className="w-full"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.dateRange.start && filters.dateRange.end
-                        ? `${format(filters.dateRange.start, "MMM dd")} - ${format(filters.dateRange.end, "MMM dd")}`
-                        : filters.dateRange.start
-                        ? format(filters.dateRange.start, "MMM dd, yyyy")
-                        : "Pick dates"}
+                      Clear Dates
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-4" align="start">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Start Date</label>
-                        <Calendar
-                          mode="single"
-                          selected={filters.dateRange.start || undefined}
-                          onSelect={(date) => handleDateRangeChange('start', date)}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <Separator />
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">End Date</label>
-                        <Calendar
-                          mode="single"
-                          selected={filters.dateRange.end || undefined}
-                          onSelect={(date) => handleDateRangeChange('end', date)}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => onFiltersChange({
-                          ...filters,
-                          dateRange: { start: null, end: null }
-                        })}
-                        className="w-full"
-                      >
-                        Clear Dates
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
 
-              {/* Album Size Filter */}
-              <div className="lg:w-48">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Album Size
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Min"
-                    value={filters.albumSizeRange.min || ''}
-                    onChange={(e) => handleAlbumSizeChange('min', e.target.value)}
-                    className="h-12"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max"
-                    value={filters.albumSizeRange.max || ''}
-                    onChange={(e) => handleAlbumSizeChange('max', e.target.value)}
-                    className="h-12"
-                  />
-                </div>
-              </div>
+            {/* Album Size Filter */}
+            <div className="lg:w-48">
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Album Size
+              </label>
+              <Select 
+                value={getAlbumSizeValue()}
+                onValueChange={handleAlbumSizeChange}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sizes</SelectItem>
+                  <SelectItem value="small">Small (1-50)</SelectItem>
+                  <SelectItem value="medium">Medium (51-200)</SelectItem>
+                  <SelectItem value="large">Large (201+)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* Sort Filter */}
-              <div className="lg:w-48">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Sort by Date
-                </label>
-                <Select value={filters.sortBy} onValueChange={(value: 'newest' | 'oldest') => 
-                  onFiltersChange({ ...filters, sortBy: value })
-                }>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Sort Filter */}
+            <div className="lg:w-48">
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Sort by Date
+              </label>
+              <Select value={filters.sortBy} onValueChange={(value: 'newest' | 'oldest') => 
+                onFiltersChange({ ...filters, sortBy: value })
+              }>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* Occurrence Filter */}
-              <div className="lg:w-48">
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Occurrence
-                </label>
-                <Select value={occurrence} onValueChange={onOccurrenceChange}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Select occurrence" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High (200+ images)</SelectItem>
-                    <SelectItem value="medium">Medium (100-200 images)</SelectItem>
-                    <SelectItem value="low">Low (≤100 images)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Occurrence Filter */}
+            <div className="lg:w-48">
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Occurrence
+              </label>
+              <Select value={occurrence} onValueChange={onOccurrenceChange}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select occurrence" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">High (200+ images)</SelectItem>
+                  <SelectItem value="medium">Medium (100-200 images)</SelectItem>
+                  <SelectItem value="low">Low (≤100 images)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -441,40 +501,6 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               </div>
             </div>
           )}
-        </div>
-      </Card>
-
-      {/* Actions Section */}
-      <Card className="p-6 shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">Actions</h3>
-              <p className="text-sm text-muted-foreground">
-                Perform operations on selected data
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                onClick={onCreateAIModel}
-                className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-glow hover:shadow-hover transition-glow"
-                disabled={selectedCount === 0}
-              >
-                <Bot className="mr-2 h-4 w-4" />
-                Create AI Model
-              </Button>
-              <Button 
-                onClick={onAnnotateImages}
-                variant="outline"
-                className="border-primary/30 hover:bg-primary/10"
-                disabled={selectedCount === 0}
-              >
-                <Tag className="mr-2 h-4 w-4" />
-                Annotate Images
-              </Button>
-            </div>
-          </div>
         </div>
       </Card>
     </div>
