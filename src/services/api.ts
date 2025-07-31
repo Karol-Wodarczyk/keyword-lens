@@ -1,5 +1,5 @@
 // API client for backend integration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5003';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // API Response Types based on OpenAPI schema
 export interface KeywordDto {
@@ -65,6 +65,8 @@ class ApiError extends Error {
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  console.log(`🔗 API Request: ${options.method || 'GET'} ${url}`);
+  
   try {
     const response = await fetch(url, {
       headers: {
@@ -74,15 +76,28 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       ...options,
     });
 
+    console.log(`📡 API Response: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
-      throw new ApiError(response.status, `API request failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`❌ API Error: ${response.status} - ${errorText}`);
+      throw new ApiError(response.status, `API request failed: ${response.statusText} - ${errorText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log(`✅ API Success:`, data);
+    return data;
   } catch (error) {
+    console.error(`💥 Network Error:`, error);
     if (error instanceof ApiError) {
       throw error;
     }
+    
+    // Check for common CORS/network issues
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new ApiError(0, `🚫 CORS or Network error: Cannot connect to ${url}. Is the backend server running?`);
+    }
+    
     throw new ApiError(0, `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
