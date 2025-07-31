@@ -41,17 +41,20 @@ const mockFrameMetadata: FrameMetaDataDto[] = Array.from({ length: 100 }, (_, i)
 
 // Mock Frame Keywords Data
 const mockFrameKeywords: FrameKeywordDataDto[] = [];
-// Generate frame keywords for each frame
-mockFrameMetadata.forEach(frame => {
-    const numKeywords = Math.floor(Math.random() * 5) + 1; // 1-5 keywords per frame
-    const selectedKeywords = mockKeywords
-        .sort(() => 0.5 - Math.random())
-        .slice(0, numKeywords);
 
-    selectedKeywords.forEach((keyword, idx) => {
+// First, ensure every keyword gets assigned to at least some frames
+// This guarantees no keyword will have zero frames
+mockKeywords.forEach(keyword => {
+    // Each keyword appears in 8-15 random frames (to match their Count values roughly)
+    const targetCount = Math.floor(keyword.Count / 10) + Math.floor(Math.random() * 8) + 3;
+    const frameIndices = Array.from({ length: 100 }, (_, i) => i + 1)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, Math.min(targetCount, 100));
+
+    frameIndices.forEach(frameId => {
         mockFrameKeywords.push({
             Id: mockFrameKeywords.length + 1,
-            FrameId: frame.Id,
+            FrameId: frameId,
             KeywordId: keyword.Id,
             KeywordName: keyword.Name,
             Confidence: Math.random() * 0.4 + 0.6, // 0.6-1.0 confidence
@@ -61,6 +64,33 @@ mockFrameMetadata.forEach(frame => {
             Y2: Math.random() * 600 + 600
         });
     });
+});
+
+// Then add some additional random relationships to make it more realistic
+mockFrameMetadata.forEach(frame => {
+    const additionalKeywords = Math.floor(Math.random() * 3); // 0-2 additional keywords
+    if (additionalKeywords > 0) {
+        const randomKeywords = mockKeywords
+            .sort(() => 0.5 - Math.random())
+            .slice(0, additionalKeywords)
+            .filter(keyword => !mockFrameKeywords.some(fk => 
+                fk.FrameId === frame.Id && fk.KeywordId === keyword.Id
+            )); // Avoid duplicates
+
+        randomKeywords.forEach(keyword => {
+            mockFrameKeywords.push({
+                Id: mockFrameKeywords.length + 1,
+                FrameId: frame.Id,
+                KeywordId: keyword.Id,
+                KeywordName: keyword.Name,
+                Confidence: Math.random() * 0.4 + 0.6,
+                X1: Math.random() * 800,
+                Y1: Math.random() * 600,
+                X2: Math.random() * 800 + 800,
+                Y2: Math.random() * 600 + 600
+            });
+        });
+    }
 });
 
 // Debug: Log the frame-keyword generation results
