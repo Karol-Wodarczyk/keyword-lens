@@ -55,6 +55,10 @@ export interface FramesForKeywords {
   confidence_max: number;
 }
 
+export interface FramesFromCluster {
+  cluster_id: number;
+}
+
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -138,6 +142,14 @@ export const apiClient = {
 
   async getBoundingBoxes(frameId: string, keywordId: string): Promise<BoundingBoxDto[]> {
     return apiRequest<BoundingBoxDto[]>(`/frame/${frameId}/keyword/${keywordId}/bounding-boxes`);
+  },
+
+  // Get frames from a specific cluster/album
+  async getFramesFromCluster(params: FramesFromCluster): Promise<ListInt64Dto> {
+    return apiRequest<ListInt64Dto>('/cluster/frames', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Utility function to convert base64 to data URL

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { apiClient } from '../services/apiConfig';
-import { FrameMetaDataDto, FramesForKeywords } from '../services/api';
+import { FrameMetaDataDto, FramesForKeywords, FramesFromCluster } from '../services/api';
 import { ImageItem } from '../types/keyword';
 import { useToast } from './use-toast';
 
@@ -122,11 +122,62 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
     }
   };
 
+  // Fetch frames from a specific cluster/album
+  const fetchFramesFromCluster = useCallback(async (clusterId: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log(`🔍 useFrames: fetchFramesFromCluster called with clusterId: ${clusterId}`);
+
+      const params: FramesFromCluster = {
+        cluster_id: clusterId,
+      };
+
+      const frameIdsResponse = await apiClient.getFramesFromCluster(params);
+
+      console.log('🔍 useFrames: Cluster API response:', {
+        frameIdsCount: frameIdsResponse.values.length,
+        frameIds: frameIdsResponse.values.slice(0, 10)
+      });
+
+      // Fetch metadata and thumbnails for each frame
+      const framePromises = frameIdsResponse.values.map(async (frameId) => {
+        const [metadata, thumbnail] = await Promise.all([
+          apiClient.getFrameMetadata(frameId.toString()),
+          apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+        ]);
+
+        return transformFrame(metadata, thumbnail.thumbnail);
+      });
+
+      const transformedFrames = await Promise.all(framePromises);
+
+      console.log('🔍 useFrames: Transformed cluster frames:', {
+        transformedFramesCount: transformedFrames.length,
+        sampleFrame: transformedFrames[0]
+      });
+
+      setFrames(transformedFrames);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch frames from cluster';
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   return {
     frames,
     loading,
     error,
     fetchFramesForKeywords,
+    fetchFramesFromCluster,
     getFrameImage,
     updateFrameKeywords,
   };

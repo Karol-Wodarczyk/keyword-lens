@@ -7,7 +7,8 @@ import {
     FrameResponse,
     ThumbnailResponse,
     ListInt64Dto,
-    FramesForKeywords
+    FramesForKeywords,
+    FramesFromCluster
 } from './api';
 
 // Mock Keywords Data (counts will be calculated dynamically)
@@ -373,6 +374,28 @@ export const mockApiClient = {
         await delay(200);
         const key = `${frameId}-${keywordId}`;
         return mockBoundingBoxes[key] || [];
+    },
+
+    async getFramesFromCluster(params: FramesFromCluster): Promise<ListInt64Dto> {
+        console.log(`🎭 Mock: Getting frames from cluster ${params.cluster_id}`);
+        await delay(300);
+        
+        // Mock cluster data - each cluster contains a subset of frames
+        // For demo purposes, create clusters of ~10 frames each
+        const clusterSize = 10;
+        const startFrame = ((params.cluster_id - 1) * clusterSize) + 1;
+        const endFrame = Math.min(startFrame + clusterSize - 1, mockFrameMetadata.length);
+        
+        const clusterFrameIds = [];
+        for (let i = startFrame; i <= endFrame; i++) {
+            clusterFrameIds.push(i);
+        }
+        
+        console.log(`🎭 Mock: Cluster ${params.cluster_id} contains frames ${startFrame}-${endFrame}:`, clusterFrameIds);
+        
+        return {
+            values: clusterFrameIds
+        };
     },
 
     base64ToDataUrl(base64: string, type: 'image' | 'thumbnail' = 'image'): string {
