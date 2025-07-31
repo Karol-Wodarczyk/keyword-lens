@@ -6,9 +6,15 @@ import { useToast } from './use-toast';
 
 // Transform API frame metadata to frontend image item type
 function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: string): ImageItem {
-  const thumbnailUrl = thumbnailBase64
+  const thumbnailUrl = thumbnailBase64 
     ? apiClient.base64ToDataUrl(thumbnailBase64, 'thumbnail')
     : '';
+
+  console.log(`🔄 Transform frame ${frameMetadata.Id}:`, {
+    thumbnailBase64Length: thumbnailBase64?.length || 0,
+    thumbnailUrl: thumbnailUrl.substring(0, 50) + '...',
+    hasUrl: !!thumbnailUrl
+  });
 
   return {
     id: frameMetadata.Id.toString(),
@@ -19,9 +25,7 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
     timestamp: new Date(frameMetadata.Timestamp).getTime(),
     isSelected: false,
   };
-}
-
-export function useFrames() {
+}export function useFrames() {
   const [frames, setFrames] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

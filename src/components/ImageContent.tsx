@@ -281,9 +281,16 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     <div className="space-y-6">
       {selectedKeywords.map((keyword) => {
         const albums = getFilteredAlbums(keyword.text);
-        const keywordFrames = frames.filter(frame =>
-          frame.keywords.some(k => k.toLowerCase().includes(keyword.text.toLowerCase()))
-        );
+        
+        // The frames array already contains frames that match the selected keywords
+        // No need to filter again since fetchFramesForKeywords already did the filtering
+        const keywordFrames = frames;
+        
+        console.log(`🖼️ Displaying frames for keyword "${keyword.text}":`, {
+          totalFramesFromAPI: frames.length,
+          keywordFramesCount: keywordFrames.length,
+          albumsCount: albums.length
+        });
 
         return (
           <Collapsible key={keyword.id} defaultOpen>

@@ -63,34 +63,84 @@ mockFrameMetadata.forEach(frame => {
     });
 });
 
-// Mock Frame Images (base64 encoded placeholder)
+// Debug: Log the frame-keyword generation results
+console.log('🎭 Mock Data Generation Complete:');
+console.log(`📊 Generated ${mockFrameKeywords.length} frame-keyword relationships`);
+console.log(`🖼️ Across ${mockFrameMetadata.length} frames`);
+console.log(`🏷️ Using ${mockKeywords.length} keywords`);
+
+// Show sample relationships for debugging
+const sampleRelationships = mockFrameKeywords.slice(0, 10).map(fk => ({
+    frameId: fk.FrameId,
+    keywordId: fk.KeywordId,
+    keywordName: fk.KeywordName
+}));
+console.log('🔍 Sample frame-keyword relationships:', sampleRelationships);
+
+// Mock Frame Images (base64 encoded placeholder) 
 const createMockImageBase64 = (frameId: number): string => {
-    // This creates a simple SVG-based placeholder image
-    const svg = `
-    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#f0f0f0"/>
-      <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial" font-size="24" fill="#666">
-        Frame ${frameId}
-      </text>
-      <rect x="50" y="50" width="700" height="500" fill="none" stroke="#ddd" stroke-width="2"/>
-    </svg>
-  `;
-    return btoa(svg); // Convert to base64
+  // Create a simple canvas-based image as backup
+  try {
+    const svg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad${frameId}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f0f0f0;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e0e0e0;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grad${frameId})"/>
+        <rect x="50" y="50" width="700" height="500" fill="none" stroke="#ccc" stroke-width="2" rx="10"/>
+        <text x="50%" y="30%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#666">
+          Frame ${frameId}
+        </text>
+        <text x="50%" y="70%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#999">
+          Mock Manufacturing Image Data
+        </text>
+        <circle cx="200" cy="200" r="30" fill="#ff6b6b" opacity="0.7"/>
+        <circle cx="600" cy="300" r="25" fill="#4ecdc4" opacity="0.7"/>
+        <circle cx="400" cy="450" r="35" fill="#45b7d1" opacity="0.7"/>
+        <rect x="300" y="150" width="200" height="80" fill="#96ceb4" opacity="0.5" rx="5"/>
+      </svg>`;
+    
+    // Properly encode the SVG
+    return btoa(unescape(encodeURIComponent(svg)));
+  } catch (error) {
+    console.error('Error creating mock image:', error);
+    // Fallback to a simple base64 image
+    return 'PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY2NiI+RnJhbWU8L3RleHQ+Cjwvc3ZnPg==';
+  }
 };
 
 const createMockThumbnailBase64 = (frameId: number): string => {
-    const svg = `
-    <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#e8e8e8"/>
-      <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="#999">
-        Thumb ${frameId}
-      </text>
-    </svg>
-  `;
-    return btoa(svg);
-};
-
-// Mock Bounding Boxes
+  try {
+    const svg = `<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="thumbGrad${frameId}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#thumbGrad${frameId})"/>
+        <rect x="10" y="10" width="180" height="130" fill="none" stroke="#dee2e6" stroke-width="1" rx="5"/>
+        <text x="50%" y="45%" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">
+          Frame ${frameId}
+        </text>
+        <text x="50%" y="65%" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">
+          Thumbnail
+        </text>
+        <circle cx="50" cy="50" r="8" fill="#ff6b6b" opacity="0.8"/>
+        <circle cx="150" cy="100" r="6" fill="#4ecdc4" opacity="0.8"/>
+        <rect x="80" y="90" width="40" height="20" fill="#96ceb4" opacity="0.6" rx="2"/>
+      </svg>`;
+    
+    // Properly encode the SVG
+    return btoa(unescape(encodeURIComponent(svg)));
+  } catch (error) {
+    console.error('Error creating mock thumbnail:', error);
+    // Fallback to a simple base64 thumbnail
+    return 'PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSI+VGh1bWI8L3RleHQ+Cjwvc3ZnPg==';
+  }
+};// Mock Bounding Boxes
 const mockBoundingBoxes: { [key: string]: BoundingBoxDto[] } = {};
 mockFrameKeywords.forEach(fk => {
     const key = `${fk.FrameId}-${fk.KeywordId}`;
@@ -109,6 +159,7 @@ mockFrameKeywords.forEach(fk => {
 export const mockApiClient = {
     async getKeywords(): Promise<KeywordDto[]> {
         console.log('🎭 Mock: Getting keywords');
+        console.log('🎭 Mock: Available keywords:', mockKeywords.map(k => ({ id: k.Id, name: k.Name, count: k.Count })));
         await delay(300); // Simulate network delay
         return mockKeywords;
     },
@@ -124,14 +175,28 @@ export const mockApiClient = {
         console.log('🎭 Mock: Getting frames for keywords', params);
         await delay(400);
 
+        // Debug: Show all available frame-keyword relationships
+        console.log('🎭 Mock: Total frame-keyword relationships:', mockFrameKeywords.length);
+        
         // Find frames that contain any of the specified keywords
-        const relevantFrameKeywords = mockFrameKeywords.filter(fk =>
+        const relevantFrameKeywords = mockFrameKeywords.filter(fk => 
             params.keyword_ids.includes(fk.KeywordId) &&
             fk.Confidence >= params.confidence_min &&
             fk.Confidence <= params.confidence_max
         );
 
         const frameIds = [...new Set(relevantFrameKeywords.map(fk => fk.FrameId))];
+        
+        console.log('🎭 Mock: Keyword IDs requested:', params.keyword_ids);
+        console.log('🎭 Mock: Confidence range:', [params.confidence_min, params.confidence_max]);
+        console.log('🎭 Mock: Found frame-keyword relationships:', relevantFrameKeywords.length);
+        console.log('🎭 Mock: Sample relationships:', relevantFrameKeywords.slice(0, 5).map(fk => ({
+            frameId: fk.FrameId,
+            keywordId: fk.KeywordId,
+            keywordName: fk.KeywordName,
+            confidence: fk.Confidence.toFixed(2)
+        })));
+        console.log('🎭 Mock: Unique frame IDs:', frameIds);
 
         return {
             values: frameIds
@@ -170,8 +235,10 @@ export const mockApiClient = {
         console.log(`🎭 Mock: Getting thumbnail for frame ${frameId}`);
         await delay(150);
         const frameIdNum = parseInt(frameId, 10);
+        const thumbnailBase64 = createMockThumbnailBase64(frameIdNum);
+        console.log(`🎭 Mock: Generated thumbnail base64 length: ${thumbnailBase64.length}`);
         return {
-            thumbnail: createMockThumbnailBase64(frameIdNum)
+            thumbnail: thumbnailBase64
         };
     },
 
@@ -183,8 +250,11 @@ export const mockApiClient = {
     },
 
     base64ToDataUrl(base64: string, type: 'image' | 'thumbnail' = 'image'): string {
-        const mimeType = 'image/svg+xml'; // Since we're using SVG placeholders
-        return `data:${mimeType};base64,${base64}`;
+        // For mock SVG images, use the proper SVG mime type
+        const mimeType = 'image/svg+xml';
+        const dataUrl = `data:${mimeType};base64,${base64}`;
+        console.log(`🖼️ Mock: Creating data URL for ${type}, length: ${base64.length}, URL preview: ${dataUrl.substring(0, 100)}...`);
+        return dataUrl;
     }
 };
 
