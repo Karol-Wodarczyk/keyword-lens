@@ -10,23 +10,23 @@ import {
     FramesForKeywords
 } from './api';
 
-// Mock Keywords Data
+// Mock Keywords Data (counts will be calculated dynamically)
 const mockKeywords: KeywordDto[] = [
-    { Id: 1, Name: "machine", IsEntity: false, Count: 156 },
-    { Id: 2, Name: "automatic", IsEntity: false, Count: 34 },
-    { Id: 3, Name: "production", IsEntity: false, Count: 41 },
-    { Id: 4, Name: "plastic", IsEntity: false, Count: 25 },
-    { Id: 5, Name: "manufacturing", IsEntity: false, Count: 89 },
-    { Id: 6, Name: "factory", IsEntity: false, Count: 3 },
-    { Id: 7, Name: "industrial", IsEntity: false, Count: 67 },
-    { Id: 8, Name: "equipment", IsEntity: false, Count: 78 },
-    { Id: 9, Name: "assembly", IsEntity: false, Count: 23 },
-    { Id: 10, Name: "conveyor", IsEntity: false, Count: 12 },
-    { Id: 11, Name: "robotic", IsEntity: false, Count: 45 },
-    { Id: 12, Name: "worker", IsEntity: false, Count: 67 },
-    { Id: 13, Name: "quality", IsEntity: false, Count: 34 },
-    { Id: 14, Name: "control", IsEntity: false, Count: 28 },
-    { Id: 15, Name: "packaging", IsEntity: false, Count: 19 }
+    { Id: 1, Name: "machine", IsEntity: false, Count: 0 },
+    { Id: 2, Name: "automatic", IsEntity: false, Count: 0 },
+    { Id: 3, Name: "production", IsEntity: false, Count: 0 },
+    { Id: 4, Name: "plastic", IsEntity: false, Count: 0 },
+    { Id: 5, Name: "manufacturing", IsEntity: false, Count: 0 },
+    { Id: 6, Name: "factory", IsEntity: false, Count: 0 },
+    { Id: 7, Name: "industrial", IsEntity: false, Count: 0 },
+    { Id: 8, Name: "equipment", IsEntity: false, Count: 0 },
+    { Id: 9, Name: "assembly", IsEntity: false, Count: 0 },
+    { Id: 10, Name: "conveyor", IsEntity: false, Count: 0 },
+    { Id: 11, Name: "robotic", IsEntity: false, Count: 0 },
+    { Id: 12, Name: "worker", IsEntity: false, Count: 0 },
+    { Id: 13, Name: "quality", IsEntity: false, Count: 0 },
+    { Id: 14, Name: "control", IsEntity: false, Count: 0 },
+    { Id: 15, Name: "packaging", IsEntity: false, Count: 0 }
 ];
 
 // Mock Frame Metadata
@@ -45,11 +45,11 @@ const mockFrameKeywords: FrameKeywordDataDto[] = [];
 // First, ensure every keyword gets assigned to at least some frames
 // This guarantees no keyword will have zero frames
 mockKeywords.forEach(keyword => {
-    // Each keyword appears in 8-15 random frames (to match their Count values roughly)
-    const targetCount = Math.floor(keyword.Count / 10) + Math.floor(Math.random() * 8) + 3;
+    // Each keyword appears in 10-25 random frames to ensure good distribution
+    const targetCount = Math.floor(Math.random() * 16) + 10; // 10-25 frames per keyword
     const frameIndices = Array.from({ length: 100 }, (_, i) => i + 1)
         .sort(() => 0.5 - Math.random())
-        .slice(0, Math.min(targetCount, 100));
+        .slice(0, targetCount);
 
     frameIndices.forEach(frameId => {
         mockFrameKeywords.push({
@@ -93,11 +93,23 @@ mockFrameMetadata.forEach(frame => {
     }
 });
 
+// Calculate actual keyword counts based on frame associations
+mockKeywords.forEach(keyword => {
+    const actualCount = mockFrameKeywords.filter(fk => fk.KeywordId === keyword.Id).length;
+    keyword.Count = actualCount;
+});
+
 // Debug: Log the frame-keyword generation results
 console.log('🎭 Mock Data Generation Complete:');
 console.log(`📊 Generated ${mockFrameKeywords.length} frame-keyword relationships`);
 console.log(`🖼️ Across ${mockFrameMetadata.length} frames`);
 console.log(`🏷️ Using ${mockKeywords.length} keywords`);
+
+// Show keyword counts
+console.log('🔢 Keyword counts (frames containing each keyword):');
+mockKeywords.forEach(keyword => {
+    console.log(`  ${keyword.Name}: ${keyword.Count} frames`);
+});
 
 // Show sample relationships for debugging
 const sampleRelationships = mockFrameKeywords.slice(0, 10).map(fk => ({
