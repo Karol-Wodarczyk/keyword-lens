@@ -13,6 +13,8 @@ const mockKeywords: Keyword[] = [
   { id: '6', text: 'architecture', imageCount: 134, isSelected: false },
   { id: '7', text: 'macro', imageCount: 45, isSelected: false },
   { id: '8', text: 'street', imageCount: 78, isSelected: false },
+  { id: '9', text: 'boxes', imageCount: 78, isSelected: false },
+  { id: '10', text: 'factory', imageCount: 78, isSelected: false },
 ];
 
 export const DataTab: React.FC = () => {

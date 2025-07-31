@@ -18,9 +18,9 @@ interface ImageContentProps {
 const mockAlbums: Album[] = [
   {
     id: '1',
-    name: 'Summer Landscapes 2024',
+    name: 'Factory Images',
     imageCount: 45,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=2070&auto=format',
+    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
     keywords: ['landscape', 'nature'],
     timestamp: Date.now() - 86400000 * 5 // 5 days ago
   },
@@ -28,7 +28,7 @@ const mockAlbums: Album[] = [
     id: '2',
     name: 'Urban Photography',
     imageCount: 32,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b58aba04b?q=80&w=2070&auto=format',
+    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
     keywords: ['urban', 'street', 'architecture'],
     timestamp: Date.now() - 86400000 * 10 // 10 days ago
   },
@@ -36,7 +36,7 @@ const mockAlbums: Album[] = [
     id: '3',
     name: 'Portrait Collection',
     imageCount: 28,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format',
+    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
     keywords: ['portrait'],
     timestamp: Date.now() - 86400000 * 2 // 2 days ago
   }
@@ -45,8 +45,8 @@ const mockAlbums: Album[] = [
 const mockImages: ImageItem[] = [
   {
     id: '1',
-    url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['landscape', 'nature'],
     title: 'Woman with Laptop',
     albumId: '1',
@@ -54,26 +54,26 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '2',
-    url: 'https://images.unsplash.com/photo-1488590528505-98d2b58aba04b?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b58aba04b?q=80&w=400&auto=format',
-    keywords: ['landscape', 'nature'],
+    url: 'https://previews.123rf.com/images/mrgao/mrgao1804/mrgao180400011/99281835-cardboard-box-on-conveyor-belt-3d-illustration-on-white-background.jpg',
+    thumbnailUrl: 'https://previews.123rf.com/images/mrgao/mrgao1804/mrgao180400011/99281835-cardboard-box-on-conveyor-belt-3d-illustration-on-white-background.jpg',
+    keywords: ['boxes', 'factory'],
     title: 'Gray Laptop Computer',
     albumId: '1',
     timestamp: Date.now() - 86400000 * 3 // 3 days ago
   },
   {
     id: '3',
-    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format',
-    keywords: ['portrait'],
+    url: 'https://c7.alamy.com/comp/2WRX871/a-large-group-of-differently-sized-neutral-cardboard-boxes-on-a-conveyor-belt-consumerism-or-mail-order-concept-2WRX871.jpg',
+    thumbnailUrl: 'https://c7.alamy.com/comp/2WRX871/a-large-group-of-differently-sized-neutral-cardboard-boxes-on-a-conveyor-belt-consumerism-or-mail-order-concept-2WRX871.jpg',
+    keywords: ['boxes', 'factory'],
     title: 'Circuit Board Macro',
     albumId: '3',
     timestamp: Date.now() - 86400000 * 7 // 7 days ago
   },
   {
     id: '4',
-    url: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['urban', 'architecture'],
     title: 'Java Programming Monitor',
     albumId: '2',
@@ -81,8 +81,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '5',
-    url: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['nature', 'wildlife'],
     title: 'MacBook Pro User',
     albumId: '1',
@@ -90,8 +90,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '6',
-    url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['street', 'urban'],
     title: 'Woman with Black Laptop',
     albumId: '2',
@@ -99,8 +99,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '7',
-    url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['urban', 'architecture'],
     title: 'White Robot',
     albumId: '2',
@@ -108,8 +108,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '8',
-    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['portrait'],
     title: 'Matrix Movie Still',
     albumId: '3',
@@ -117,8 +117,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '9',
-    url: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['landscape', 'nature'],
     title: 'Gray and Black Laptop',
     albumId: '1',
@@ -126,8 +126,8 @@ const mockImages: ImageItem[] = [
   },
   {
     id: '10',
-    url: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=2070&auto=format',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=400&auto=format',
+    url: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
+    thumbnailUrl: 'https://www.wylerindustrial.com/wp-content/uploads/2020/09/AdobeStock_191946463-768x512.jpeg',
     keywords: ['street', 'urban'],
     title: 'Colorful Code Monitor',
     albumId: '2',
