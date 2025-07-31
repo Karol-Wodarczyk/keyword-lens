@@ -21,21 +21,24 @@ const mockAlbums: Album[] = [
     name: 'Summer Landscapes 2024',
     imageCount: 45,
     thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=2070&auto=format',
-    keywords: ['landscape', 'nature']
+    keywords: ['landscape', 'nature'],
+    timestamp: Date.now() - 86400000 * 5 // 5 days ago
   },
   {
     id: '2',
     name: 'Urban Photography',
     imageCount: 32,
     thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b58aba04b?q=80&w=2070&auto=format',
-    keywords: ['urban', 'street', 'architecture']
+    keywords: ['urban', 'street', 'architecture'],
+    timestamp: Date.now() - 86400000 * 10 // 10 days ago
   },
   {
     id: '3',
     name: 'Portrait Collection',
     imageCount: 28,
     thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format',
-    keywords: ['portrait']
+    keywords: ['portrait'],
+    timestamp: Date.now() - 86400000 * 2 // 2 days ago
   }
 ];
 
@@ -46,7 +49,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=400&auto=format',
     keywords: ['landscape', 'nature'],
     title: 'Woman with Laptop',
-    albumId: '1'
+    albumId: '1',
+    timestamp: Date.now() - 86400000 * 1 // 1 day ago
   },
   {
     id: '2',
@@ -54,7 +58,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b58aba04b?q=80&w=400&auto=format',
     keywords: ['landscape', 'nature'],
     title: 'Gray Laptop Computer',
-    albumId: '1'
+    albumId: '1',
+    timestamp: Date.now() - 86400000 * 3 // 3 days ago
   },
   {
     id: '3',
@@ -62,7 +67,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format',
     keywords: ['portrait'],
     title: 'Circuit Board Macro',
-    albumId: '3'
+    albumId: '3',
+    timestamp: Date.now() - 86400000 * 7 // 7 days ago
   },
   {
     id: '4',
@@ -70,7 +76,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=400&auto=format',
     keywords: ['urban', 'architecture'],
     title: 'Java Programming Monitor',
-    albumId: '2'
+    albumId: '2',
+    timestamp: Date.now() - 86400000 * 4 // 4 days ago
   },
   {
     id: '5',
@@ -78,7 +85,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=400&auto=format',
     keywords: ['nature', 'wildlife'],
     title: 'MacBook Pro User',
-    albumId: '1'
+    albumId: '1',
+    timestamp: Date.now() - 86400000 * 6 // 6 days ago
   },
   {
     id: '6',
@@ -86,7 +94,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=400&auto=format',
     keywords: ['street', 'urban'],
     title: 'Woman with Black Laptop',
-    albumId: '2'
+    albumId: '2',
+    timestamp: Date.now() - 86400000 * 8 // 8 days ago
   },
   {
     id: '7',
@@ -94,7 +103,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=400&auto=format',
     keywords: ['urban', 'architecture'],
     title: 'White Robot',
-    albumId: '2'
+    albumId: '2',
+    timestamp: Date.now() - 86400000 * 9 // 9 days ago
   },
   {
     id: '8',
@@ -102,7 +112,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=400&auto=format',
     keywords: ['portrait'],
     title: 'Matrix Movie Still',
-    albumId: '3'
+    albumId: '3',
+    timestamp: Date.now() - 86400000 * 5 // 5 days ago
   },
   {
     id: '9',
@@ -110,7 +121,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=400&auto=format',
     keywords: ['landscape', 'nature'],
     title: 'Gray and Black Laptop',
-    albumId: '1'
+    albumId: '1',
+    timestamp: Date.now() - 86400000 * 12 // 12 days ago
   },
   {
     id: '10',
@@ -118,7 +130,8 @@ const mockImages: ImageItem[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=400&auto=format',
     keywords: ['street', 'urban'],
     title: 'Colorful Code Monitor',
-    albumId: '2'
+    albumId: '2',
+    timestamp: Date.now() - 86400000 * 11 // 11 days ago
   }
 ];
 

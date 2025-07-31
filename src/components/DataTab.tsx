@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { SearchAndFilter } from './SearchAndFilter';
 import { ImageContent } from './ImageContent';
-import { Keyword } from '../types/keyword';
+import { Keyword, FilterState, BulkSelectionState } from '../types/keyword';
+import { useToast } from '@/hooks/use-toast';
 
 const mockKeywords: Keyword[] = [
   { id: '1', text: 'landscape', imageCount: 245, isSelected: false },
@@ -17,6 +18,16 @@ const mockKeywords: Keyword[] = [
 export const DataTab: React.FC = () => {
   const [keywords, setKeywords] = useState<Keyword[]>(mockKeywords);
   const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('high');
+  const [filters, setFilters] = useState<FilterState>({
+    dateRange: { start: null, end: null },
+    albumSizeRange: { min: 0, max: 1000 },
+    sortBy: 'newest'
+  });
+  const [bulkSelection, setBulkSelection] = useState<BulkSelectionState>({
+    selectedImages: [],
+    selectedAlbums: []
+  });
+  const { toast } = useToast();
 
   const handleKeywordToggle = (keywordId: string) => {
     setKeywords(prev => prev.map(keyword => 
@@ -32,6 +43,51 @@ export const DataTab: React.FC = () => {
         ? { ...keyword, text: newText }
         : keyword
     ));
+  };
+
+  const handleBulkSelectAll = (keywordId: string, type: 'images' | 'albums') => {
+    // Mock implementation - in real app, would fetch actual items for the keyword
+    const mockIds = Array.from({length: 10}, (_, i) => `${type}-${keywordId}-${i}`);
+    
+    setBulkSelection(prev => ({
+      ...prev,
+      [type === 'images' ? 'selectedImages' : 'selectedAlbums']: [
+        ...prev[type === 'images' ? 'selectedImages' : 'selectedAlbums'],
+        ...mockIds
+      ]
+    }));
+
+    toast({
+      title: "Selection Updated",
+      description: `Selected all ${type} for keyword`
+    });
+  };
+
+  const handleBulkDeselectAll = (keywordId: string, type: 'images' | 'albums') => {
+    setBulkSelection(prev => ({
+      ...prev,
+      [type === 'images' ? 'selectedImages' : 'selectedAlbums']: prev[type === 'images' ? 'selectedImages' : 'selectedAlbums']
+        .filter(id => !id.includes(keywordId))
+    }));
+
+    toast({
+      title: "Selection Cleared",
+      description: `Cleared ${type} selection for keyword`
+    });
+  };
+
+  const handleCreateAIModel = () => {
+    toast({
+      title: "AI Model Creation",
+      description: "Starting AI model training with selected data...",
+    });
+  };
+
+  const handleAnnotateImages = () => {
+    toast({
+      title: "Image Annotation",
+      description: "Opening annotation tool for selected images...",
+    });
   };
 
   const selectedKeywords = keywords.filter(k => k.isSelected);
@@ -59,9 +115,17 @@ export const DataTab: React.FC = () => {
         <SearchAndFilter
           keywords={keywords}
           occurrence={occurrence}
+          filters={filters}
+          bulkSelection={bulkSelection}
           onKeywordToggle={handleKeywordToggle}
           onKeywordEdit={handleKeywordEdit}
           onOccurrenceChange={setOccurrence}
+          onFiltersChange={setFilters}
+          onBulkSelectionChange={setBulkSelection}
+          onBulkSelectAll={handleBulkSelectAll}
+          onBulkDeselectAll={handleBulkDeselectAll}
+          onCreateAIModel={handleCreateAIModel}
+          onAnnotateImages={handleAnnotateImages}
         />
 
         {/* Image Content Section */}
