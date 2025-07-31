@@ -72,6 +72,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   );
 
   const selectedCount = keywords.filter(k => k.isSelected).length;
+  const hiddenCount = keywords.filter(k => k.isHidden).length;
 
   const handleEditStart = (keyword: Keyword) => {
     setEditingId(keyword.id);
@@ -195,6 +196,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                           size="sm"
                           onClick={() => setShowHiddenKeywords(!showHiddenKeywords)}
                           className="gap-2"
+                          disabled={hiddenCount === 0}
                         >
                           {showHiddenKeywords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           {showHiddenKeywords ? 'Hide Hidden Keywords' : 'Show Hidden Keywords'}
