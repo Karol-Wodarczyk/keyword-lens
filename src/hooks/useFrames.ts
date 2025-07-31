@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { apiClient, FrameMetaDataDto, FramesForKeywords } from '../services/api';
+import { useState, useCallback } from 'react';
+import { apiClient } from '../services/apiConfig';
+import { FrameMetaDataDto, FramesForKeywords } from '../services/api';
 import { ImageItem } from '../types/keyword';
 import { useToast } from './use-toast';
 
@@ -26,7 +27,7 @@ export function useFrames() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchFramesForKeywords = async (
+  const fetchFramesForKeywords = useCallback(async (
     keywordIds: string[],
     confidenceMin: number = 0,
     confidenceMax: number = 1
@@ -75,9 +76,7 @@ export function useFrames() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getFrameImage = async (frameId: string): Promise<string> => {
+  }, [toast]); const getFrameImage = async (frameId: string): Promise<string> => {
     try {
       const response = await apiClient.getFrame(frameId);
       return apiClient.base64ToDataUrl(response.frame);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SearchAndFilter } from './SearchAndFilter';
 import { ImageContent } from './ImageContent';
+import { ApiStatusIndicator } from './ApiStatusIndicator';
 import { FilterState, BulkSelectionState } from '../types/keyword';
 import { useToast } from '@/hooks/use-toast';
 import { useKeywords } from '../hooks/useKeywords';
@@ -82,6 +83,9 @@ export const DataTab: React.FC = () => {
       <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto space-y-6 relative z-10">
+        {/* API Status Indicator */}
+        <ApiStatusIndicator />
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2 animate-fade-in">

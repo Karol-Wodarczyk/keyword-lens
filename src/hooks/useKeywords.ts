@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { apiClient, KeywordDto } from '../services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { apiClient } from '../services/apiConfig';
+import { KeywordDto } from '../services/api';
 import { Keyword } from '../types/keyword';
 import { useToast } from './use-toast';
 
@@ -19,10 +20,10 @@ export function useKeywords() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchKeywords = async () => {
+  const fetchKeywords = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const apiKeywords = await apiClient.getKeywords();
       const transformedKeywords = apiKeywords.map(transformKeyword);
@@ -38,19 +39,19 @@ export function useKeywords() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const toggleKeyword = (keywordId: string) => {
-    setKeywords(prev => prev.map(keyword => 
-      keyword.id === keywordId 
+    setKeywords(prev => prev.map(keyword =>
+      keyword.id === keywordId
         ? { ...keyword, isSelected: !keyword.isSelected }
         : keyword
     ));
   };
 
   const editKeyword = (keywordId: string, newText: string) => {
-    setKeywords(prev => prev.map(keyword => 
-      keyword.id === keywordId 
+    setKeywords(prev => prev.map(keyword =>
+      keyword.id === keywordId
         ? { ...keyword, text: newText }
         : keyword
     ));
@@ -58,7 +59,7 @@ export function useKeywords() {
 
   useEffect(() => {
     fetchKeywords();
-  }, []);
+  }, [fetchKeywords]);
 
   return {
     keywords,
