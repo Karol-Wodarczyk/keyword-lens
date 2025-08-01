@@ -9,6 +9,7 @@ import { ImageViewer } from './ImageViewer';
 import { useFrames } from '../hooks/useFrames';
 import { apiClient } from '../services/apiConfig';
 import { useToast } from '../hooks/use-toast';
+import { format } from 'date-fns';
 
 interface ImageContentProps {
   selectedKeywords: Keyword[];
@@ -301,15 +302,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div className="p-3 relative z-10">
-                <h6 className="text-sm font-medium text-foreground mb-1 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
-                  {image.title}
-                </h6>
-                <div className="flex flex-wrap gap-1">
-                  {image.keywords.slice(0, 2).map((kw, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
-                      {kw}
-                    </Badge>
-                  ))}
+                <div className="text-xs text-muted-foreground mb-1">
+                  ID: {image.id}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {format(new Date(image.timestamp), 'yyyy-MM-dd HH:mm:ss')}
                 </div>
               </div>
             </Card>
@@ -448,15 +445,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                             <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           </div>
                           <div className="p-3 relative z-10">
-                            <h6 className="text-sm font-medium text-foreground mb-1 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300">
-                              {image.title}
-                            </h6>
-                            <div className="flex flex-wrap gap-1">
-                              {image.keywords.slice(0, 2).map((kw, idx) => (
-                                <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
-                                  {kw}
-                                </Badge>
-                              ))}
+                            <div className="text-xs text-muted-foreground mb-1">
+                              ID: {image.id}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(image.timestamp), 'yyyy-MM-dd HH:mm:ss')}
                             </div>
                           </div>
                         </Card>
