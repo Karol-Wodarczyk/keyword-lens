@@ -7,6 +7,8 @@ import { ChevronDown, Images, FolderOpen, Loader2 } from 'lucide-react';
 import { Keyword, Album, ImageItem, OccurrenceType } from '../types/keyword';
 import { ImageViewer } from './ImageViewer';
 import { useFrames } from '../hooks/useFrames';
+import { apiClient } from '../services/apiConfig';
+import { useToast } from '../hooks/use-toast';
 
 interface ImageContentProps {
   selectedKeywords: Keyword[];
@@ -70,6 +72,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
   const { frames, loading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
+  const { toast } = useToast();
 
   // Fetch frames for selected keywords
   useEffect(() => {
@@ -115,14 +118,68 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     setSelectedAlbum(null);
   };
 
-  const handleKeywordHide = (imageId: string, keywordText: string) => {
-    // For now, just update local state - would need backend endpoint
-    console.log('Hide keyword:', keywordText, 'from image:', imageId);
+  const { updateFrameKeywords } = useFrames();
+
+  const handleKeywordDelete = async (imageId: string, keywordText: string) => {
+    try {
+      // Find the keyword ID from the global keywords list
+      const keyword = keywords.find(k => k.text.toLowerCase() === keywordText.toLowerCase());
+      if (!keyword) {
+        console.error('Keyword not found:', keywordText);
+        return;
+      }
+
+      // Call the API to delete the keyword from this frame
+      await apiClient.deleteKeywordFromFrame(imageId, parseInt(keyword.id));
+      
+      // Update the frame's keywords in the local state
+      await updateFrameKeywords(imageId);
+      
+      toast({
+        title: "Keyword Deleted",
+        description: `Successfully removed "${keywordText}" from the image.`,
+      });
+      
+      console.log('Successfully deleted keyword:', keywordText, 'from image:', imageId);
+    } catch (error) {
+      console.error('Failed to delete keyword:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete keyword: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleKeywordRename = (imageId: string, oldKeyword: string, newKeyword: string) => {
-    // For now, just update local state - would need backend endpoint
-    console.log('Rename keyword:', oldKeyword, 'to:', newKeyword, 'for image:', imageId);
+  const handleKeywordRename = async (imageId: string, oldKeyword: string, newKeyword: string) => {
+    try {
+      // Find the keyword ID from the global keywords list
+      const keyword = keywords.find(k => k.text.toLowerCase() === oldKeyword.toLowerCase());
+      if (!keyword) {
+        console.error('Keyword not found:', oldKeyword);
+        return;
+      }
+
+      // Call the API to rename the keyword for this frame
+      await apiClient.renameKeywordForFrame(imageId, parseInt(keyword.id), newKeyword);
+      
+      // Update the frame's keywords in the local state
+      await updateFrameKeywords(imageId);
+      
+      toast({
+        title: "Keyword Renamed",
+        description: `Successfully renamed "${oldKeyword}" to "${newKeyword}".`,
+      });
+      
+      console.log('Successfully renamed keyword:', oldKeyword, 'to:', newKeyword, 'for image:', imageId);
+    } catch (error) {
+      console.error('Failed to rename keyword:', error);
+      toast({
+        title: "Error",
+        description: `Failed to rename keyword: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const getFilteredAlbums = (keyword: string) => {
@@ -264,7 +321,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
           image={viewerImage}
           open={viewerOpen}
           onOpenChange={setViewerOpen}
-          onKeywordHide={handleKeywordHide}
+          onKeywordDelete={handleKeywordDelete}
           onKeywordRename={handleKeywordRename}
           allKeywords={keywords}
         />
@@ -426,7 +483,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         image={viewerImage}
         open={viewerOpen}
         onOpenChange={setViewerOpen}
-        onKeywordHide={handleKeywordHide}
+        onKeywordDelete={handleKeywordDelete}
         onKeywordRename={handleKeywordRename}
         allKeywords={keywords}
       />

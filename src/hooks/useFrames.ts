@@ -69,14 +69,18 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
         frameIds: frameIdsResponse.values.slice(0, 10)
       });
 
-      // Fetch metadata and thumbnails for each frame
+      // Fetch metadata, thumbnails, and keywords for each frame
       const framePromises = frameIdsResponse.values.map(async (frameId) => {
-        const [metadata, thumbnail] = await Promise.all([
+        const [metadata, thumbnail, frameKeywords] = await Promise.all([
           apiClient.getFrameMetadata(frameId.toString()),
           apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+          apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
         ]);
 
-        return transformFrame(metadata, thumbnail.thumbnail);
+        const frame = transformFrame(metadata, thumbnail.thumbnail);
+        // Populate keywords for this frame
+        frame.keywords = frameKeywords.map(fk => fk.KeywordName);
+        return frame;
       });
 
       const transformedFrames = await Promise.all(framePromises);
@@ -141,14 +145,18 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
         frameIds: frameIdsResponse.values.slice(0, 10)
       });
 
-      // Fetch metadata and thumbnails for each frame
+      // Fetch metadata, thumbnails, and keywords for each frame
       const framePromises = frameIdsResponse.values.map(async (frameId) => {
-        const [metadata, thumbnail] = await Promise.all([
+        const [metadata, thumbnail, frameKeywords] = await Promise.all([
           apiClient.getFrameMetadata(frameId.toString()),
           apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+          apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
         ]);
 
-        return transformFrame(metadata, thumbnail.thumbnail);
+        const frame = transformFrame(metadata, thumbnail.thumbnail);
+        // Populate keywords for this frame
+        frame.keywords = frameKeywords.map(fk => fk.KeywordName);
+        return frame;
       });
 
       const transformedFrames = await Promise.all(framePromises);

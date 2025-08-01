@@ -59,6 +59,24 @@ export interface FramesFromCluster {
   cluster_id: number;
 }
 
+export interface KeywordRename {
+  SourceId: number;
+  Target: string;
+}
+
+export interface PostKeyword {
+  action: string;
+  name: string;
+  x1?: number;
+  y1?: number;
+  x2?: number;
+  y2?: number;
+  confidence: number;
+  is_entity: boolean;
+  origin: number;
+  id?: number;
+}
+
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -149,6 +167,35 @@ export const apiClient = {
     return apiRequest<ListInt64Dto>('/cluster/frames', {
       method: 'POST',
       body: JSON.stringify(params),
+    });
+  },
+
+  // Keyword operations
+  async renameKeywordForFrame(frameId: string, sourceKeywordId: number, targetKeywordName: string): Promise<void> {
+    const params: KeywordRename = {
+      SourceId: sourceKeywordId,
+      Target: targetKeywordName,
+    };
+    
+    return apiRequest<void>(`/frame/${frameId}/keyword/replace`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  async deleteKeywordFromFrame(frameId: string, keywordId: number): Promise<void> {
+    const deleteAction: PostKeyword = {
+      action: 'delete',
+      name: '', // Name not required for delete action
+      confidence: 0,
+      is_entity: false,
+      origin: 0,
+      id: keywordId,
+    };
+    
+    return apiRequest<void>(`/frame/${frameId}/keywords`, {
+      method: 'POST',
+      body: JSON.stringify([deleteAction]),
     });
   },
 

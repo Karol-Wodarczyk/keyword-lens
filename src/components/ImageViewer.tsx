@@ -3,14 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Edit2, Eye, EyeOff, Check } from 'lucide-react';
+import { X, Edit2, Trash2, Check, Save } from 'lucide-react';
 import { ImageItem, Keyword } from '../types/keyword';
 
 interface ImageViewerProps {
   image: ImageItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onKeywordHide: (imageId: string, keywordText: string) => void;
+  onKeywordDelete: (imageId: string, keywordText: string) => void;
   onKeywordRename: (imageId: string, oldKeyword: string, newKeyword: string) => void;
   allKeywords: Keyword[];
 }
@@ -19,7 +19,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   image,
   open,
   onOpenChange,
-  onKeywordHide,
+  onKeywordDelete,
   onKeywordRename,
   allKeywords
 }) => {
@@ -135,10 +135,11 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => onKeywordHide(image.id, keyword)}
+                            onClick={() => onKeywordDelete(image.id, keyword)}
                             className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete keyword"
                           >
-                            <EyeOff className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </>
@@ -147,9 +148,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                 </div>
               ))}
               
-              {image.keywords.length === 0 && (
+                {image.keywords.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <Save className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No keywords associated with this image</p>
                 </div>
               )}

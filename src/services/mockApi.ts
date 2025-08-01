@@ -8,7 +8,9 @@ import {
     ThumbnailResponse,
     ListInt64Dto,
     FramesForKeywords,
-    FramesFromCluster
+    FramesFromCluster,
+    KeywordRename,
+    PostKeyword
 } from './api';
 
 // Mock Keywords Data (counts will be calculated dynamically)
@@ -404,6 +406,45 @@ export const mockApiClient = {
         const dataUrl = `data:${mimeType};base64,${base64}`;
         console.log(`🖼️ Mock: Creating data URL for ${type}, length: ${base64.length}, URL preview: ${dataUrl.substring(0, 100)}...`);
         return dataUrl;
+    },
+
+    // Keyword operations
+    async renameKeywordForFrame(frameId: string, sourceKeywordId: number, targetKeywordName: string): Promise<void> {
+        console.log(`🎭 Mock: Renaming keyword ID ${sourceKeywordId} to "${targetKeywordName}" for frame ${frameId}`);
+        await delay(300);
+        
+        // Find and update the keyword in mock data
+        const frameIdNum = parseInt(frameId, 10);
+        const keywordToUpdate = mockFrameKeywords.find(fk => 
+            fk.FrameId === frameIdNum && fk.KeywordId === sourceKeywordId
+        );
+        
+        if (keywordToUpdate) {
+            keywordToUpdate.KeywordName = targetKeywordName;
+            console.log(`🎭 Mock: Successfully renamed keyword for frame ${frameId}`);
+        } else {
+            console.log(`🎭 Mock: Keyword not found for frame ${frameId}`);
+        }
+    },
+
+    async deleteKeywordFromFrame(frameId: string, keywordId: number): Promise<void> {
+        console.log(`🎭 Mock: Deleting keyword ID ${keywordId} from frame ${frameId}`);
+        await delay(200);
+        
+        // Remove the keyword from mock data
+        const frameIdNum = parseInt(frameId, 10);
+        const initialLength = mockFrameKeywords.length;
+        
+        // Filter out the keyword for this frame
+        const updatedKeywords = mockFrameKeywords.filter(fk => 
+            !(fk.FrameId === frameIdNum && fk.KeywordId === keywordId)
+        );
+        
+        // Update the mock data (in a real app, this would be handled differently)
+        mockFrameKeywords.splice(0, mockFrameKeywords.length, ...updatedKeywords);
+        
+        const removed = initialLength - mockFrameKeywords.length;
+        console.log(`🎭 Mock: Successfully removed ${removed} keyword association(s) for frame ${frameId}`);
     },
 
     // DEBUG: Direct test function
