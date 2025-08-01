@@ -324,6 +324,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
           onKeywordDelete={handleKeywordDelete}
           onKeywordRename={handleKeywordRename}
           allKeywords={keywords}
+          selectedKeywords={selectedKeywords}
         />
       </div>
     );
@@ -486,6 +487,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         onKeywordDelete={handleKeywordDelete}
         onKeywordRename={handleKeywordRename}
         allKeywords={keywords}
+        selectedKeywords={selectedKeywords}
       />
     </div>
   );
