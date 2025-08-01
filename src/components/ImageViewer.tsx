@@ -69,7 +69,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
           </div>
 
           {/* Keywords Management */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
               Keywords
               <Badge variant="outline" className="border-primary/30 bg-secondary/50">
@@ -77,19 +77,19 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               </Badge>
             </h3>
             
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               {image.keywords.map((keyword, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-gradient-subtle rounded-lg border border-primary/20 group hover:shadow-glow transition-all duration-300"
+                  className="flex items-center justify-between p-2 bg-gradient-subtle rounded-lg border border-primary/20 group hover:shadow-glow transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-2 flex-1">
                     {editingKeyword === keyword ? (
-                      <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-1 flex-1">
                         <Input
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="flex-1"
+                          className="flex-1 h-7"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleKeywordSave(keyword);
@@ -102,7 +102,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                         <Button
                           size="sm"
                           onClick={() => handleKeywordSave(keyword)}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0"
                         >
                           <Check className="h-4 w-4" />
                         </Button>
@@ -110,7 +110,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                           size="sm"
                           variant="outline"
                           onClick={handleKeywordCancel}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -118,17 +118,17 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                     ) : (
                       <>
                         <div className="flex items-center gap-2 flex-1">
-                          <span className="font-medium text-foreground">{keyword}</span>
+                          <span className="font-medium text-foreground text-sm">{keyword}</span>
                           <Badge variant="secondary" className="text-xs bg-secondary/50 border border-primary/20">
                             {getKeywordImageCount(keyword)} images
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleKeywordEdit(keyword)}
-                            className="h-8 w-8 p-0 hover:bg-primary/10"
+                            className="h-7 w-7 p-0 hover:bg-primary/10"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -136,7 +136,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                             size="sm"
                             variant="ghost"
                             onClick={() => onKeywordDelete(image.id, keyword)}
-                            className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
                             title="Delete keyword"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -148,10 +148,10 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                 </div>
               ))}
               
-                {image.keywords.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Save className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No keywords associated with this image</p>
+              {image.keywords.length === 0 && (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Save className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No keywords associated with this image</p>
                 </div>
               )}
             </div>
