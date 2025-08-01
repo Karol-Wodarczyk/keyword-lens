@@ -78,6 +78,24 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Main Keywords Label - Above Image */}
+          {selectedKeywords.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Found for keywords:</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedKeywords.map((keyword, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="default" 
+                    className="bg-primary/20 border-primary/40 text-primary font-medium"
+                  >
+                    {keyword.text}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Image Display */}
           <div className="relative bg-muted rounded-lg overflow-hidden shadow-glow">
             <img 
@@ -90,9 +108,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
           {/* Keywords Management */}
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              Keywords
+              All Keywords
               <Badge variant="outline" className="border-primary/30 bg-secondary/50">
-                {image.keywords.length}
+                {sortedKeywords.length}
               </Badge>
             </h3>
             
