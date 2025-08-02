@@ -53,8 +53,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     return keyword ? keyword.imageCount : 0;
   };
 
-  // Sort keywords to show main/selected keywords first
-  const sortedKeywords = image ? [...image.keywords].sort((a, b) => {
+  // Sort keywords to show main/selected keywords first, and deduplicate
+  const uniqueKeywords = image ? [...new Set(image.keywords)] : [];
+  const sortedKeywords = uniqueKeywords.sort((a, b) => {
     const aIsSelected = selectedKeywords.some(sk => sk.text.toLowerCase() === a.toLowerCase());
     const bIsSelected = selectedKeywords.some(sk => sk.text.toLowerCase() === b.toLowerCase());
     
@@ -64,7 +65,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     
     // Within same category, sort alphabetically
     return a.localeCompare(b);
-  }) : [];
+  });
 
   const isMainKeyword = (keywordText: string) => {
     return selectedKeywords.some(sk => sk.text.toLowerCase() === keywordText.toLowerCase());

@@ -70,6 +70,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 }) => {
   const [viewerImage, setViewerImage] = useState<ImageItem | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerKeywordContext, setViewerKeywordContext] = useState<Keyword | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
   const { frames, loading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
@@ -94,7 +95,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     fetchFramesForKeywords(filteredKeywordIds, 0, 1);
   }, [selectedKeywords, fetchFramesForKeywords]);
 
-  const handleImageClick = async (image: ImageItem) => {
+  const handleImageClick = async (image: ImageItem, keywordContext?: Keyword) => {
     try {
       // Load the full image if not already loaded
       if (!image.url) {
@@ -102,6 +103,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         image.url = fullImageUrl;
       }
       setViewerImage(image);
+      setViewerKeywordContext(keywordContext || null);
       setViewerOpen(true);
     } catch (error) {
       console.error('Failed to load image:', error);
@@ -119,6 +121,13 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     setSelectedAlbum(null);
   };
 
+  const handleViewerClose = (open: boolean) => {
+    setViewerOpen(open);
+    if (!open) {
+      setViewerKeywordContext(null);
+    }
+  };
+
   const { updateFrameKeywords } = useFrames();
 
   const handleKeywordDelete = async (imageId: string, keywordText: string) => {
@@ -132,15 +141,15 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
       // Call the API to delete the keyword from this frame
       await apiClient.deleteKeywordFromFrame(imageId, parseInt(keyword.id));
-      
+
       // Update the frame's keywords in the local state
       await updateFrameKeywords(imageId);
-      
+
       toast({
         title: "Keyword Deleted",
         description: `Successfully removed "${keywordText}" from the image.`,
       });
-      
+
       console.log('Successfully deleted keyword:', keywordText, 'from image:', imageId);
     } catch (error) {
       console.error('Failed to delete keyword:', error);
@@ -163,15 +172,15 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
       // Call the API to rename the keyword for this frame
       await apiClient.renameKeywordForFrame(imageId, parseInt(keyword.id), newKeyword);
-      
+
       // Update the frame's keywords in the local state
       await updateFrameKeywords(imageId);
-      
+
       toast({
         title: "Keyword Renamed",
         description: `Successfully renamed "${oldKeyword}" to "${newKeyword}".`,
       });
-      
+
       console.log('Successfully renamed keyword:', oldKeyword, 'to:', newKeyword, 'for image:', imageId);
     } catch (error) {
       console.error('Failed to rename keyword:', error);
@@ -317,11 +326,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         <ImageViewer
           image={viewerImage}
           open={viewerOpen}
-          onOpenChange={setViewerOpen}
+          onOpenChange={handleViewerClose}
           onKeywordDelete={handleKeywordDelete}
           onKeywordRename={handleKeywordRename}
           allKeywords={keywords}
-          selectedKeywords={selectedKeywords}
+          selectedKeywords={viewerKeywordContext ? [viewerKeywordContext] : selectedKeywords}
         />
       </div>
     );
@@ -433,7 +442,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                         <Card
                           key={image.id}
                           className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-                          onClick={() => handleImageClick(image)}
+                          onClick={() => handleImageClick(image, keyword)}
                         >
                           <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
                           <div className="aspect-square bg-muted relative overflow-hidden">
@@ -476,11 +485,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
       <ImageViewer
         image={viewerImage}
         open={viewerOpen}
-        onOpenChange={setViewerOpen}
+        onOpenChange={handleViewerClose}
         onKeywordDelete={handleKeywordDelete}
         onKeywordRename={handleKeywordRename}
         allKeywords={keywords}
-        selectedKeywords={selectedKeywords}
+        selectedKeywords={viewerKeywordContext ? [viewerKeywordContext] : selectedKeywords}
       />
     </div>
   );
