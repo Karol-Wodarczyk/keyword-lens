@@ -8,9 +8,11 @@ export interface Keyword {
 
 export interface Album {
   id: string;
+  configId: number;
+  albumId: number;
   name: string;
   imageCount: number;
-  thumbnailUrl: string;
+  thumbnailUrls: string[]; // Array of 4 thumbnail URLs for 2x2 grid
   keywords: string[];
   timestamp: number;
   isSelected?: boolean;

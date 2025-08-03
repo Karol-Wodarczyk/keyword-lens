@@ -48,7 +48,7 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
       // Convert string IDs to numbers
       const numericKeywordIds = keywordIds.map(id => parseInt(id, 10));
 
-      console.log('🔍 useFrames: fetchFramesForKeywords called with:', {
+      console.log('🔍 FRAME DEBUG: fetchFramesForKeywords called with:', {
         keywordIds,
         numericKeywordIds,
         confidenceMin,
@@ -64,7 +64,7 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
 
       const frameIdsResponse = await apiClient.getFramesForKeywords(params);
 
-      console.log('🔍 useFrames: API response:', {
+      console.log('🔍 FRAME DEBUG: API response:', {
         frameIdsCount: frameIdsResponse.values.length,
         frameIds: frameIdsResponse.values.slice(0, 10)
       });

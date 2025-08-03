@@ -7,6 +7,7 @@ import { ChevronDown, Images, FolderOpen, Loader2 } from 'lucide-react';
 import { Keyword, Album, ImageItem, OccurrenceType } from '../types/keyword';
 import { ImageViewer } from './ImageViewer';
 import { useFrames } from '../hooks/useFrames';
+import { useAlbums } from '../hooks/useAlbums';
 import { apiClient } from '../services/apiConfig';
 import { useToast } from '../hooks/use-toast';
 import { format } from 'date-fns';
@@ -17,50 +18,6 @@ interface ImageContentProps {
   keywords: Keyword[];
   onKeywordUpdate: (keywords: Keyword[]) => void;
 }
-
-// Mock data for albums (keeping albums as mock for now)
-const mockAlbums: Album[] = [
-  {
-    id: '1',
-    name: 'Factory Production Line',
-    imageCount: 45,
-    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['machine', 'production', 'factory'],
-    timestamp: Date.now() - 86400000 * 5 // 5 days ago
-  },
-  {
-    id: '2',
-    name: 'Quality Control Center',
-    imageCount: 32,
-    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['quality', 'control', 'equipment'],
-    timestamp: Date.now() - 86400000 * 10 // 10 days ago
-  },
-  {
-    id: '3',
-    name: 'Assembly & Packaging',
-    imageCount: 28,
-    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['assembly', 'packaging', 'conveyor'],
-    timestamp: Date.now() - 86400000 * 2 // 2 days ago
-  },
-  {
-    id: '4',
-    name: 'Automated Manufacturing',
-    imageCount: 38,
-    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['automatic', 'robotic', 'manufacturing'],
-    timestamp: Date.now() - 86400000 * 7 // 7 days ago
-  },
-  {
-    id: '5',
-    name: 'Industrial Operations',
-    imageCount: 25,
-    thumbnailUrl: 'https://stlpartnership.com/wp-content/uploads/2024/02/TrueManufacturing_Collage.jpg',
-    keywords: ['industrial', 'worker', 'plastic'],
-    timestamp: Date.now() - 86400000 * 3 // 3 days ago
-  }
-];
 
 export const ImageContent: React.FC<ImageContentProps> = ({
   selectedKeywords,
@@ -74,6 +31,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
   const { frames, loading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
+  const { albums, loading: albumsLoading, fetchAlbumsForKeywords, getAlbumFrames } = useAlbums();
   const { toast } = useToast();
 
   // Fetch frames for selected keywords
@@ -85,15 +43,38 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     const filteredKeywordIds = selectedKeywords.map(k => k.id);
 
     console.log('🔍 Fetching frames for selected keywords:', {
-      selectedKeywords: selectedKeywords.map(k => ({ text: k.text, count: k.imageCount })),
+      selectedKeywords: selectedKeywords.map(k => ({ text: k.text, count: k.imageCount, id: k.id })),
       filteredKeywordIds
     });
 
-    console.log('🔍 SPECIFIC DEBUG: Is quality keyword selected?', selectedKeywords.find(k => k.text === 'quality'));
+    console.log('🔍 SPECIFIC DEBUG: Is row keyword selected?', selectedKeywords.find(k => k.text === 'row'));
 
     // Fetch frames without confidence filtering (confidence not used)
     fetchFramesForKeywords(filteredKeywordIds, 0, 1);
   }, [selectedKeywords, fetchFramesForKeywords]);
+
+  // Fetch albums when frames are loaded
+  useEffect(() => {
+    if (frames.length > 0) {
+      const frameIds = frames.map(frame => parseInt(frame.id, 10));
+      console.log('📁 IMAGECONTENTDEBUG: Fetching albums for frame IDs:', frameIds.slice(0, 10), '... (total:', frameIds.length, ')');
+      console.log('📁 IMAGECONTENTDEBUG: Full frame IDs list:', frameIds);
+      fetchAlbumsForKeywords(frameIds);
+    } else {
+      console.log('📁 IMAGECONTENTDEBUG: No frames available for albums');
+    }
+  }, [frames, fetchAlbumsForKeywords]);
+
+  // Debug albums state
+  useEffect(() => {
+    console.log('🎯 ALBUMS STATE DEBUG:', { 
+      albumsLength: albums.length, 
+      albumsLoading, 
+      albums: albums.slice(0, 2),
+      selectedKeywords: selectedKeywords.map(k => k.text),
+      framesLength: frames.length
+    });
+  }, [albums, albumsLoading, selectedKeywords, frames]);
 
   const handleImageClick = async (image: ImageItem, keywordContext?: Keyword) => {
     try {
@@ -193,9 +174,17 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   };
 
   const getFilteredAlbums = (keyword: string) => {
-    return mockAlbums.filter(album =>
-      album.keywords.some(k => k.toLowerCase().includes(keyword.toLowerCase()))
-    );
+    // Instead of filtering by album keywords, we should show all albums
+    // since they were already filtered during fetchAlbumsForKeywords to contain
+    // frames that match the selected keywords (including this keyword)
+    
+    console.log(`📁 Showing albums for keyword "${keyword}":`, {
+      totalAlbums: albums.length,
+      albums: albums.map(a => ({ id: a.id, name: a.name, keywords: a.keywords }))
+    });
+    
+    // Return all albums since they already contain matching frames
+    return albums;
   };
 
   const getAlbumImages = (albumId: string) => {
@@ -204,17 +193,17 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   };
 
   // Show loading state
-  if (loading && selectedKeywords.length > 0) {
+  if ((loading || albumsLoading) && selectedKeywords.length > 0) {
     return (
       <Card className="p-12 text-center shadow-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
         <div className="relative z-10">
           <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            Loading Frames...
+            Loading {loading ? 'Frames' : 'Albums'}...
           </h3>
           <p className="text-muted-foreground">
-            Fetching frames from the backend for selected keywords
+            {loading ? 'Fetching frames from the backend for selected keywords' : 'Fetching albums that contain matching frames'}
           </p>
         </div>
       </Card>
@@ -392,11 +381,22 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                         >
                           <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
                           <div className="aspect-video bg-muted relative overflow-hidden">
-                            <img
-                              src={album.thumbnailUrl}
-                              alt={album.name}
-                              className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
-                            />
+                            {/* 2x2 Thumbnail Grid */}
+                            <div className="grid grid-cols-2 grid-rows-2 h-full gap-0.5 p-0.5">
+                              {album.thumbnailUrls.slice(0, 4).map((thumbnailUrl, idx) => (
+                                <div key={idx} className="overflow-hidden rounded-sm">
+                                  <img
+                                    src={thumbnailUrl}
+                                    alt={`${album.name} thumbnail ${idx + 1}`}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                              ))}
+                              {/* Fill remaining spaces if less than 4 thumbnails */}
+                              {Array.from({ length: Math.max(0, 4 - album.thumbnailUrls.length) }).map((_, idx) => (
+                                <div key={`placeholder-${idx}`} className="bg-muted-foreground/20 rounded-sm"></div>
+                              ))}
+                            </div>
                             <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           </div>
                           <div className="p-3 relative z-10">

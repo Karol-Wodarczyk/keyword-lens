@@ -9,6 +9,8 @@ import {
     ListInt64Dto,
     FramesForKeywords,
     FramesFromCluster,
+    FramesForGroupThumbnail,
+    Int64Dto,
     KeywordRename,
     PostKeyword
 } from './api';
@@ -29,7 +31,8 @@ const mockKeywords: KeywordDto[] = [
     { Id: 12, Name: "worker", IsEntity: false, Count: 0 },
     { Id: 13, Name: "quality", IsEntity: false, Count: 0 },
     { Id: 14, Name: "control", IsEntity: false, Count: 0 },
-    { Id: 15, Name: "packaging", IsEntity: false, Count: 0 }
+    { Id: 15, Name: "packaging", IsEntity: false, Count: 0 },
+    { Id: 16, Name: "row", IsEntity: false, Count: 0 }
 ];
 
 // Mock Frame Metadata
@@ -63,6 +66,7 @@ const keywordFrameStrategy = [
     { keyword: "assembly", targetFrames: 18 },
     { keyword: "conveyor", targetFrames: 10 },
     { keyword: "robotic", targetFrames: 8 },
+    { keyword: "row", targetFrames: 14 },
 
     // LOW OCCURRENCE (1-4 frames)
     { keyword: "automatic", targetFrames: 3 },
@@ -445,6 +449,54 @@ export const mockApiClient = {
         
         const removed = initialLength - mockFrameKeywords.length;
         console.log(`🎭 Mock: Successfully removed ${removed} keyword association(s) for frame ${frameId}`);
+    },
+
+    // Configuration and Album methods
+    async getConfigIds(): Promise<number[]> {
+        console.log('🎭 Mock: Getting configuration IDs');
+        await delay(100);
+        // Mock 3 configurations
+        return [1, 2, 3];
+    },
+
+    async getAlbumIdsForConfig(configId: number): Promise<number[]> {
+        console.log(`🎭 Mock: Getting album IDs for config ${configId}`);
+        await delay(100);
+        // Mock different number of albums per config
+        if (configId === 1) return [101, 102, 103, 104, 105];
+        if (configId === 2) return [201, 202, 203];
+        if (configId === 3) return [301, 302, 303, 304];
+        return [];
+    },
+
+    async getFramesCountForGroupConfig(configId: number, albumId: number): Promise<number> {
+        console.log(`🎭 Mock: Getting frame count for config ${configId}, album ${albumId}`);
+        await delay(100);
+        // Mock random frame counts between 10-50
+        return Math.floor(Math.random() * 40) + 10;
+    },
+
+    async getFrameIdsForAlbumThumbnail(configId: number, albumId: number, totalFramesCountInAlbum: number): Promise<number[]> {
+        console.log(`🎭 Mock: Getting thumbnail frame IDs for config ${configId}, album ${albumId}`);
+        await delay(100);
+        // Return 4 random frame IDs for 2x2 thumbnail grid
+        const frameIds = [];
+        for (let i = 0; i < 4; i++) {
+            frameIds.push(Math.floor(Math.random() * 100) + 1);
+        }
+        return frameIds;
+    },
+
+    async getFrameIdsForGroup(configId: number, albumId: number): Promise<number[]> {
+        console.log(`🎭 Mock: Getting all frame IDs for config ${configId}, album ${albumId}`);
+        await delay(150);
+        // Return random set of frame IDs
+        const count = Math.floor(Math.random() * 30) + 10; // 10-40 frames
+        const frameIds = [];
+        for (let i = 0; i < count; i++) {
+            frameIds.push(Math.floor(Math.random() * 100) + 1);
+        }
+        return frameIds;
     },
 
     // DEBUG: Direct test function

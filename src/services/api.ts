@@ -55,8 +55,22 @@ export interface FramesForKeywords {
   confidence_max: number;
 }
 
+export interface FramesForGroupThumbnail {
+  cluster_id: number;
+  config_id: number;
+  frames_count: number;
+}
+
 export interface FramesFromCluster {
   cluster_id: number;
+  config_id: number;
+  images_number: number;
+  order: string;
+  redundant: boolean;
+}
+
+export interface Int64Dto {
+  Value: number; // API returns uppercase V
 }
 
 export interface KeywordRename {
@@ -164,10 +178,57 @@ export const apiClient = {
 
   // Get frames from a specific cluster/album
   async getFramesFromCluster(params: FramesFromCluster): Promise<ListInt64Dto> {
-    return apiRequest<ListInt64Dto>('/cluster/frames', {
+    return apiRequest<ListInt64Dto>('/clusters/frame-ids', {
       method: 'POST',
       body: JSON.stringify(params),
     });
+  },
+
+  // Configuration and Album methods
+  async getConfigIds(): Promise<number[]> {
+    const response = await apiRequest<ListInt64Dto>('/clusters/config-ids');
+    return response.values;
+  },
+
+  async getAlbumIdsForConfig(configId: number): Promise<number[]> {
+    const response = await apiRequest<ListInt64Dto>(`/configs/${configId}/cluster-ids`);
+    return response.values;
+  },
+
+  async getFramesCountForGroupConfig(configId: number, albumId: number): Promise<number> {
+    const response = await apiRequest<Int64Dto>(`/configs/${configId}/clusters/${albumId}/frames-count`);
+    return response.Value; // Use uppercase V to match API response
+  },
+
+  async getFrameIdsForAlbumThumbnail(configId: number, albumId: number, totalFramesCountInAlbum: number): Promise<number[]> {
+    const params: FramesForGroupThumbnail = {
+      cluster_id: albumId,
+      config_id: configId,
+      frames_count: totalFramesCountInAlbum
+    };
+    
+    console.log('🖼️ THUMBNAIL DEBUG: Sending request with params:', params);
+    
+    const response = await apiRequest<ListInt64Dto>('/clusters/frame-ids-thumbnail', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    return response.values;
+  },
+
+  async getFrameIdsForGroup(configId: number, albumId: number): Promise<number[]> {
+    const params: FramesFromCluster = {
+      cluster_id: albumId,
+      config_id: configId,
+      images_number: 1000, // Get a large number to get all frames
+      order: 'DESC',
+      redundant: false
+    };
+    const response = await apiRequest<ListInt64Dto>('/clusters/frame-ids', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    return response.values;
   },
 
   // Keyword operations
