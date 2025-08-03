@@ -67,9 +67,9 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
   // Debug albums state
   useEffect(() => {
-    console.log('🎯 ALBUMS STATE DEBUG:', { 
-      albumsLength: albums.length, 
-      albumsLoading, 
+    console.log('🎯 ALBUMS STATE DEBUG:', {
+      albumsLength: albums.length,
+      albumsLoading,
       albums: albums.slice(0, 2),
       selectedKeywords: selectedKeywords.map(k => k.text),
       framesLength: frames.length
@@ -177,12 +177,12 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     // Instead of filtering by album keywords, we should show all albums
     // since they were already filtered during fetchAlbumsForKeywords to contain
     // frames that match the selected keywords (including this keyword)
-    
+
     console.log(`📁 Showing albums for keyword "${keyword}":`, {
       totalAlbums: albums.length,
       albums: albums.map(a => ({ id: a.id, name: a.name, keywords: a.keywords }))
     });
-    
+
     // Return all albums since they already contain matching frames
     return albums;
   };

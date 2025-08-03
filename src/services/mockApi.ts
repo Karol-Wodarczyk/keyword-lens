@@ -385,20 +385,20 @@ export const mockApiClient = {
     async getFramesFromCluster(params: FramesFromCluster): Promise<ListInt64Dto> {
         console.log(`🎭 Mock: Getting frames from cluster ${params.cluster_id}`);
         await delay(300);
-        
+
         // Mock cluster data - each cluster contains a subset of frames
         // For demo purposes, create clusters of ~10 frames each
         const clusterSize = 10;
         const startFrame = ((params.cluster_id - 1) * clusterSize) + 1;
         const endFrame = Math.min(startFrame + clusterSize - 1, mockFrameMetadata.length);
-        
+
         const clusterFrameIds = [];
         for (let i = startFrame; i <= endFrame; i++) {
             clusterFrameIds.push(i);
         }
-        
+
         console.log(`🎭 Mock: Cluster ${params.cluster_id} contains frames ${startFrame}-${endFrame}:`, clusterFrameIds);
-        
+
         return {
             values: clusterFrameIds
         };
@@ -416,13 +416,13 @@ export const mockApiClient = {
     async renameKeywordForFrame(frameId: string, sourceKeywordId: number, targetKeywordName: string): Promise<void> {
         console.log(`🎭 Mock: Renaming keyword ID ${sourceKeywordId} to "${targetKeywordName}" for frame ${frameId}`);
         await delay(300);
-        
+
         // Find and update the keyword in mock data
         const frameIdNum = parseInt(frameId, 10);
-        const keywordToUpdate = mockFrameKeywords.find(fk => 
+        const keywordToUpdate = mockFrameKeywords.find(fk =>
             fk.FrameId === frameIdNum && fk.KeywordId === sourceKeywordId
         );
-        
+
         if (keywordToUpdate) {
             keywordToUpdate.KeywordName = targetKeywordName;
             console.log(`🎭 Mock: Successfully renamed keyword for frame ${frameId}`);
@@ -434,19 +434,19 @@ export const mockApiClient = {
     async deleteKeywordFromFrame(frameId: string, keywordId: number): Promise<void> {
         console.log(`🎭 Mock: Deleting keyword ID ${keywordId} from frame ${frameId}`);
         await delay(200);
-        
+
         // Remove the keyword from mock data
         const frameIdNum = parseInt(frameId, 10);
         const initialLength = mockFrameKeywords.length;
-        
+
         // Filter out the keyword for this frame
-        const updatedKeywords = mockFrameKeywords.filter(fk => 
+        const updatedKeywords = mockFrameKeywords.filter(fk =>
             !(fk.FrameId === frameIdNum && fk.KeywordId === keywordId)
         );
-        
+
         // Update the mock data (in a real app, this would be handled differently)
         mockFrameKeywords.splice(0, mockFrameKeywords.length, ...updatedKeywords);
-        
+
         const removed = initialLength - mockFrameKeywords.length;
         console.log(`🎭 Mock: Successfully removed ${removed} keyword association(s) for frame ${frameId}`);
     },

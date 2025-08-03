@@ -58,11 +58,11 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   const sortedKeywords = uniqueKeywords.sort((a, b) => {
     const aIsSelected = selectedKeywords.some(sk => sk.text.toLowerCase() === a.toLowerCase());
     const bIsSelected = selectedKeywords.some(sk => sk.text.toLowerCase() === b.toLowerCase());
-    
+
     // Selected keywords come first
     if (aIsSelected && !bIsSelected) return -1;
     if (!aIsSelected && bIsSelected) return 1;
-    
+
     // Within same category, sort alphabetically
     return a.localeCompare(b);
   });
@@ -77,7 +77,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         <DialogHeader>
           <DialogTitle className="text-foreground">{image.title}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Main Keywords Label - Above Image */}
           {selectedKeywords.length > 0 && (
@@ -85,9 +85,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               <h3 className="text-sm font-medium text-muted-foreground">Found for keywords:</h3>
               <div className="flex flex-wrap gap-2">
                 {selectedKeywords.map((keyword, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="default" 
+                  <Badge
+                    key={index}
+                    variant="default"
                     className="bg-primary/20 border-primary/40 text-primary font-medium"
                   >
                     {keyword.text}
@@ -99,8 +99,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
           {/* Image Display */}
           <div className="relative bg-muted rounded-lg overflow-hidden shadow-glow">
-            <img 
-              src={image.url} 
+            <img
+              src={image.url}
               alt={image.title}
               className="w-full h-auto max-h-[60vh] object-contain"
             />
@@ -114,16 +114,15 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                 {sortedKeywords.length}
               </Badge>
             </h3>
-            
+
             <div className="grid gap-2">
               {sortedKeywords.map((keyword, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between p-2 rounded-lg border group hover:shadow-glow transition-all duration-300 ${
-                    isMainKeyword(keyword) 
-                      ? 'bg-gradient-primary/10 border-primary/40 ring-1 ring-primary/20' 
+                  className={`flex items-center justify-between p-2 rounded-lg border group hover:shadow-glow transition-all duration-300 ${isMainKeyword(keyword)
+                      ? 'bg-gradient-primary/10 border-primary/40 ring-1 ring-primary/20'
                       : 'bg-gradient-subtle border-primary/20'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2 flex-1">
                     {editingKeyword === keyword ? (
@@ -163,13 +162,12 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                           <span className={`font-medium text-sm ${isMainKeyword(keyword) ? 'text-primary font-semibold' : 'text-foreground'}`}>
                             {keyword}
                           </span>
-                          <Badge 
-                            variant={isMainKeyword(keyword) ? "default" : "secondary"} 
-                            className={`text-xs ${
-                              isMainKeyword(keyword) 
-                                ? 'bg-primary/20 border-primary/40 text-primary' 
+                          <Badge
+                            variant={isMainKeyword(keyword) ? "default" : "secondary"}
+                            className={`text-xs ${isMainKeyword(keyword)
+                                ? 'bg-primary/20 border-primary/40 text-primary'
                                 : 'bg-secondary/50 border border-primary/20'
-                            }`}
+                              }`}
                           >
                             {getKeywordImageCount(keyword)} images
                           </Badge>
@@ -203,7 +201,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                   </div>
                 </div>
               ))}
-              
+
               {sortedKeywords.length === 0 && (
                 <div className="text-center py-6 text-muted-foreground">
                   <Save className="h-6 w-6 mx-auto mb-2 opacity-50" />

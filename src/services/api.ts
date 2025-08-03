@@ -206,9 +206,9 @@ export const apiClient = {
       config_id: configId,
       frames_count: totalFramesCountInAlbum
     };
-    
+
     console.log('🖼️ THUMBNAIL DEBUG: Sending request with params:', params);
-    
+
     const response = await apiRequest<ListInt64Dto>('/clusters/frame-ids-thumbnail', {
       method: 'POST',
       body: JSON.stringify(params),
@@ -237,7 +237,7 @@ export const apiClient = {
       SourceId: sourceKeywordId,
       Target: targetKeywordName,
     };
-    
+
     return apiRequest<void>(`/frame/${frameId}/keyword/replace`, {
       method: 'POST',
       body: JSON.stringify(params),
@@ -253,7 +253,7 @@ export const apiClient = {
       origin: 0,
       id: keywordId,
     };
-    
+
     return apiRequest<void>(`/frame/${frameId}/keywords`, {
       method: 'POST',
       body: JSON.stringify([deleteAction]),
