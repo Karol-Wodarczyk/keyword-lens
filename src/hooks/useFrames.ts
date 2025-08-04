@@ -136,6 +136,10 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
 
       const params: FramesFromCluster = {
         cluster_id: clusterId,
+        config_id: 1, // Default config ID
+        images_number: 1000, // Get a large number to get all frames
+        order: 'DESC',
+        redundant: false,
       };
 
       const frameIdsResponse = await apiClient.getFramesFromCluster(params);

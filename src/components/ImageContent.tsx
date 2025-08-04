@@ -388,7 +388,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
             <CollapsibleContent className="space-y-2 border border-primary/20 border-t-0 rounded-b-lg rounded-t-none p-4 bg-gradient-card/30 backdrop-blur-sm">
               {/* Two-column layout: Albums (30%) + Images (70%) with vertical divider */}
-              <div className="flex gap-6 min-h-[500px]">
+              <div className="flex gap-6 min-h-[600px]">
                 {/* Albums Section - 30% width */}
                 <div className="w-[30%] flex flex-col">
                   <div className="flex items-center gap-2 mb-2">
@@ -480,15 +480,15 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <Badge variant="outline" className="text-xs">{keywordFrames.length}</Badge>
                   </div>
 
-                  {keywordFrames.length > 0 ? (
+                   {keywordFrames.length > 0 ? (
                     <div className="flex flex-col h-full">
-                      {/* Static height grid container - no scrolling */}
-                      <div className="h-[400px] flex-shrink-0 overflow-hidden">
-                        <div className="grid grid-cols-3 gap-3 h-full auto-rows-fr">
+                      {/* Increased height grid container with better spacing for 3 rows */}
+                      <div className="h-[550px] flex-shrink-0 overflow-hidden">
+                        <div className="grid grid-cols-3 gap-4 h-full" style={{ gridTemplateRows: 'repeat(3, 1fr)' }}>
                           {currentImages.map((image) => (
                             <Card
                               key={image.id}
-                              className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative aspect-square flex flex-col"
+                              className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative flex flex-col"
                               onClick={() => handleImageClick(image, keyword)}
                             >
                               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
@@ -500,10 +500,10 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                 />
                                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                               </div>
-                              <div className="px-1 py-1 relative z-10 flex-shrink-0 bg-gradient-card/95">
-                                <div className="text-[10px] text-center leading-tight">
-                                  <div className="font-medium text-foreground truncate">ID: {image.id}</div>
-                                  <div className="text-muted-foreground/90 truncate">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</div>
+                              <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
+                                <div className="text-xs text-center leading-relaxed">
+                                  <div className="font-medium text-foreground mb-1">ID: {image.id}</div>
+                                  <div className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</div>
                                 </div>
                               </div>
                             </Card>
