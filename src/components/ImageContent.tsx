@@ -500,12 +500,14 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                 />
                                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                               </div>
-                              <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
-                                <div className="text-xs text-center leading-relaxed">
-                                  <div className="font-medium text-foreground mb-1">ID: {image.id}</div>
-                                  <div className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</div>
-                                </div>
-                              </div>
+                               <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
+                                 <div className="text-xs text-center leading-relaxed">
+                                   <div className="flex justify-between items-center gap-2">
+                                     <span className="font-medium text-foreground">ID: {image.id}</span>
+                                     <span className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                                   </div>
+                                 </div>
+                               </div>
                             </Card>
                           ))}
                         </div>
