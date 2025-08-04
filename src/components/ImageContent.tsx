@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, Images, FolderOpen, Loader2 } from 'lucide-react';
 import { Keyword, Album, ImageItem, OccurrenceType } from '../types/keyword';
 import { ImageViewer } from './ImageViewer';
@@ -29,6 +31,12 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerKeywordContext, setViewerKeywordContext] = useState<Keyword | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+
+  // Pagination states
+  const [currentAlbumPage, setCurrentAlbumPage] = useState(1);
+  const [currentImagePage, setCurrentImagePage] = useState(1);
+  const albumsPerPage = 2;
+  const imagesPerPage = 9;
 
   const { frames, loading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
   const { albums, loading: albumsLoading, fetchAlbumsForKeywords, getAlbumFrames } = useAlbums();
@@ -326,7 +334,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {selectedKeywords.map((keyword) => {
         const albums = getFilteredAlbums(keyword.text);
 
@@ -334,89 +342,122 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         // No need to filter again since fetchFramesForKeywords already did the filtering
         const keywordFrames = frames;
 
+        // Pagination calculations
+        const totalAlbumPages = Math.ceil(albums.length / albumsPerPage);
+        const totalImagePages = Math.ceil(keywordFrames.length / imagesPerPage);
+
+        const albumStartIndex = (currentAlbumPage - 1) * albumsPerPage;
+        const albumEndIndex = albumStartIndex + albumsPerPage;
+        const currentAlbums = albums.slice(albumStartIndex, albumEndIndex);
+
+        const imageStartIndex = (currentImagePage - 1) * imagesPerPage;
+        const imageEndIndex = imageStartIndex + imagesPerPage;
+        const currentImages = keywordFrames.slice(imageStartIndex, imageEndIndex);
+
         console.log(`🖼️ Displaying frames for keyword "${keyword.text}":`, {
           totalFramesFromAPI: frames.length,
           keywordFramesCount: keywordFrames.length,
-          albumsCount: albums.length
+          albumsCount: albums.length,
+          currentAlbumsCount: currentAlbums.length,
+          currentImagesCount: currentImages.length,
+          pagination: {
+            albumPage: `${currentAlbumPage}/${totalAlbumPages}`,
+            imagePage: `${currentImagePage}/${totalImagePages}`
+          }
         });
 
         return (
           <Collapsible key={keyword.id} defaultOpen>
             <CollapsibleTrigger className="w-full">
-              <Card className="p-4 shadow-glow hover:shadow-hover transition-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden group">
+              <Card className="p-3 shadow-glow hover:shadow-hover transition-glow bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-lg"></div>
                 <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-gradient-primary shadow-glow animate-glow-pulse"></div>
-                    <h3 className="text-lg font-semibold text-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-gradient-primary shadow-glow animate-glow-pulse"></div>
+                    <h3 className="text-base font-semibold text-foreground">
                       Frames tagged with "{keyword.text}"
                     </h3>
-                    <Badge variant="secondary" className="ml-2 bg-secondary/80 backdrop-blur-sm border border-primary/20">
+                    <Badge variant="secondary" className="ml-2 bg-secondary/80 backdrop-blur-sm border border-primary/20 text-xs">
                       {albums.length + keywordFrames.length} items
                     </Badge>
                   </div>
-                  <ChevronDown className="h-5 w-5 text-primary transition-all duration-300 data-[state=open]:rotate-180 group-hover:text-primary-glow" />
+                  <ChevronDown className="h-4 w-4 text-primary transition-all duration-300 data-[state=open]:rotate-180 group-hover:text-primary-glow" />
                 </div>
               </Card>
             </CollapsibleTrigger>
 
-            <CollapsibleContent className="space-y-4 mt-4">
-              {/* Two-column layout: Albums (30%) + Images (70%) */}
-              <div className="flex gap-6 min-h-[400px]">
+            <CollapsibleContent className="space-y-2 border border-primary/20 border-t-0 rounded-b-lg rounded-t-none p-4 bg-gradient-card/30 backdrop-blur-sm">
+              {/* Two-column layout: Albums (30%) + Images (70%) with vertical divider */}
+              <div className="flex gap-6 min-h-[500px]">
                 {/* Albums Section - 30% width */}
-                <div className="w-[30%] space-y-4">
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-primary" />
-                    <h4 className="font-medium text-foreground">Albums</h4>
-                    <Badge variant="outline">{albums.length}</Badge>
+                <div className="w-[30%] flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FolderOpen className="h-4 w-4 text-primary" />
+                    <h4 className="font-medium text-foreground text-sm">Albums</h4>
+                    <Badge variant="outline" className="text-xs">{albums.length}</Badge>
                   </div>
 
                   {albums.length > 0 ? (
-                    <div className="space-y-3">
-                      {albums.map((album) => (
-                        <Card
-                          key={album.id}
-                          className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-                          onClick={() => handleAlbumClick(album)}
-                        >
-                          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
-                          <div className="aspect-video bg-muted relative overflow-hidden">
-                            {/* 2x2 Thumbnail Grid */}
-                            <div className="grid grid-cols-2 grid-rows-2 h-full gap-0.5 p-0.5">
-                              {album.thumbnailUrls.slice(0, 4).map((thumbnailUrl, idx) => (
-                                <div key={idx} className="overflow-hidden rounded-sm">
-                                  <img
-                                    src={thumbnailUrl}
-                                    alt={`${album.name} thumbnail ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                </div>
-                              ))}
-                              {/* Fill remaining spaces if less than 4 thumbnails */}
-                              {Array.from({ length: Math.max(0, 4 - album.thumbnailUrls.length) }).map((_, idx) => (
-                                <div key={`placeholder-${idx}`} className="bg-muted-foreground/20 rounded-sm"></div>
-                              ))}
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          </div>
-                          <div className="p-3 relative z-10">
-                            <h5 className="font-medium text-foreground mb-1 line-clamp-1 group-hover:text-primary-glow transition-colors duration-300 text-sm">
-                              {album.name}
-                            </h5>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{album.imageCount} images</span>
-                              <div className="flex gap-1">
-                                {album.keywords.slice(0, 1).map((kw, idx) => (
-                                  <Badge key={idx} variant="outline" className="text-xs border-primary/30 bg-secondary/50 backdrop-blur-sm">
-                                    {kw}
-                                  </Badge>
+                    <>
+                      <div className="space-y-3 flex-1 py-2">
+                        {currentAlbums.map((album) => (
+                          <Card
+                            key={album.id}
+                            className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
+                            onClick={() => handleAlbumClick(album)}
+                          >
+                            <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+                            <div className="aspect-[2/1] bg-muted relative overflow-hidden">
+                              {/* 2x2 Thumbnail Grid */}
+                              <div className="grid grid-cols-2 grid-rows-2 h-full gap-1 p-1">
+                                {album.thumbnailUrls.slice(0, 4).map((thumbnailUrl, idx) => (
+                                  <div key={idx} className="overflow-hidden rounded-sm">
+                                    <img
+                                      src={thumbnailUrl}
+                                      alt={`${album.name} thumbnail ${idx + 1}`}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  </div>
+                                ))}
+                                {/* Fill remaining spaces if less than 4 thumbnails */}
+                                {Array.from({ length: Math.max(0, 4 - album.thumbnailUrls.length) }).map((_, idx) => (
+                                  <div key={`placeholder-${idx}`} className="bg-muted-foreground/20 rounded-sm"></div>
                                 ))}
                               </div>
+                              <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
+                            <div className="p-2 relative z-10">
+                              <div className="text-xs text-muted-foreground truncate">
+                                {album.name} • {album.imageCount}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                      {albums.length > albumsPerPage && (
+                        <div className="flex justify-center mt-1 w-full">
+                          <div className="flex items-center gap-1 text-xs">
+                            <button
+                              onClick={() => setCurrentAlbumPage(Math.max(1, currentAlbumPage - 1))}
+                              disabled={currentAlbumPage === 1}
+                              className="h-6 w-6 flex items-center justify-center rounded border border-primary/20 bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              ‹
+                            </button>
+                            <span className="px-2 text-muted-foreground">
+                              {currentAlbumPage} / {totalAlbumPages}
+                            </span>
+                            <button
+                              onClick={() => setCurrentAlbumPage(Math.min(totalAlbumPages, currentAlbumPage + 1))}
+                              disabled={currentAlbumPage === totalAlbumPages}
+                              className="h-6 w-6 flex items-center justify-center rounded border border-primary/20 bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              ›
+                            </button>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <Card className="p-6 text-center bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
@@ -428,51 +469,91 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                   )}
                 </div>
 
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-primary/20 via-primary/40 to-primary/20 mx-4"></div>
+
                 {/* Images Section - 70% width */}
-                <div className="w-[70%] space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Images className="h-5 w-5 text-primary" />
-                    <h4 className="font-medium text-foreground">Images</h4>
-                    <Badge variant="outline">{keywordFrames.length}</Badge>
+                <div className="w-[70%] flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Images className="h-4 w-4 text-primary" />
+                    <h4 className="font-medium text-foreground text-sm">Images</h4>
+                    <Badge variant="outline" className="text-xs">{keywordFrames.length}</Badge>
                   </div>
 
                   {keywordFrames.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {keywordFrames.map((image) => (
-                        <Card
-                          key={image.id}
-                          className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-                          onClick={() => handleImageClick(image, keyword)}
-                        >
-                          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
-                          <div className="aspect-square bg-muted relative overflow-hidden">
-                            <img
-                              src={image.thumbnailUrl}
-                              alt={image.title}
-                              className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          </div>
-                          <div className="p-3 relative z-10">
-                            <div className="text-xs text-muted-foreground mb-1">
-                              ID: {image.id}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {format(new Date(image.timestamp), 'yyyy-MM-dd HH:mm:ss')}
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
+                    <div className="flex flex-col h-full">
+                      {/* Static height grid container - no scrolling */}
+                      <div className="h-[400px] flex-shrink-0 overflow-hidden">
+                        <div className="grid grid-cols-3 gap-3 h-full auto-rows-fr">
+                          {currentImages.map((image) => (
+                            <Card
+                              key={image.id}
+                              className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative aspect-square flex flex-col"
+                              onClick={() => handleImageClick(image, keyword)}
+                            >
+                              <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+                              <div className="flex-1 bg-muted relative overflow-hidden">
+                                <img
+                                  src={image.thumbnailUrl}
+                                  alt={image.title}
+                                  className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              </div>
+                              <div className="px-1 py-1 relative z-10 flex-shrink-0 bg-gradient-card/95">
+                                <div className="text-[10px] text-center leading-tight">
+                                  <div className="font-medium text-foreground truncate">ID: {image.id}</div>
+                                  <div className="text-muted-foreground/90 truncate">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</div>
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Fixed position pagination */}
+                      <div className="flex justify-center mt-2 py-1 flex-shrink-0">
+                        {keywordFrames.length > imagesPerPage && (
+                          <Pagination>
+                            <PaginationContent className="gap-1">
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  onClick={() => setCurrentImagePage(Math.max(1, currentImagePage - 1))}
+                                  className={`h-8 px-2 text-xs ${currentImagePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                />
+                              </PaginationItem>
+                              {Array.from({ length: totalImagePages }, (_, i) => i + 1).map((page) => (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    onClick={() => setCurrentImagePage(page)}
+                                    isActive={currentImagePage === page}
+                                    className="h-8 w-8 text-xs cursor-pointer"
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              ))}
+                              <PaginationItem>
+                                <PaginationNext
+                                  onClick={() => setCurrentImagePage(Math.min(totalImagePages, currentImagePage + 1))}
+                                  className={`h-8 px-2 text-xs ${currentImagePage === totalImagePages ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <Card className="p-8 text-center bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-                      <div className="relative z-10">
-                        <Images className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                        <h5 className="font-medium text-foreground mb-1">No images found</h5>
-                        <p className="text-sm text-muted-foreground">No frames found for this keyword</p>
-                      </div>
-                    </Card>
+                    <div className="flex-1 flex items-center justify-center">
+                      <Card className="p-8 text-center bg-gradient-card border border-primary/20 backdrop-blur-sm relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+                        <div className="relative z-10">
+                          <Images className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                          <h5 className="font-medium text-foreground mb-1">No images found</h5>
+                          <p className="text-sm text-muted-foreground">No frames found for this keyword</p>
+                        </div>
+                      </Card>
+                    </div>
                   )}
                 </div>
               </div>
