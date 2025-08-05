@@ -297,14 +297,32 @@ async function loadFramesInBackground(
           if (shouldUpdateUI) {
             console.log(`🔍 BACKGROUND LOADING: Updating UI with ${accumulatedFrames.length} new frames (total processed: ${processedCount})`);
             console.log(`🔍 BACKGROUND LOADING: Frame IDs being added:`, accumulatedFrames.map(f => f.id));
+            console.log(`🔍 BACKGROUND LOADING: AccumulatedFrames sample:`, accumulatedFrames.slice(0, 3));
+
+            // Capture accumulated frames before clearing the array to avoid React timing issues
+            const framesToProcess = [...accumulatedFrames];
+            accumulatedFrames.length = 0; // Clear accumulated frames immediately
+
             setFrames(prev => {
-              const newFrames = [...prev, ...accumulatedFrames];
-              console.log(`🔍 BACKGROUND LOADING: UI updated, total frames now: ${newFrames.length} (was ${prev.length}, added ${accumulatedFrames.length})`);
+              console.log(`🔍 BACKGROUND LOADING: SetFrames callback - prev.length: ${prev.length}, adding: ${framesToProcess.length}`);
+              console.log(`🔍 BACKGROUND LOADING: Checking if we're at 81 limit: ${prev.length === 81}`);
+
+              // Check for duplicate IDs before adding
+              const existingIds = new Set(prev.map(f => f.id));
+              const framesToAdd = framesToProcess.filter(f => !existingIds.has(f.id));
+              console.log(`🔍 BACKGROUND LOADING: After duplicate filtering: ${framesToAdd.length} frames to add (was ${framesToProcess.length})`);
+
+              if (framesToAdd.length === 0) {
+                console.log(`🔍 BACKGROUND LOADING: No new frames to add - all were duplicates`);
+                return prev;
+              }
+
+              const newFrames = [...prev, ...framesToAdd];
+              console.log(`🔍 BACKGROUND LOADING: UI updated, total frames now: ${newFrames.length} (was ${prev.length}, added ${framesToAdd.length})`);
               console.log(`🔍 BACKGROUND LOADING: Previous frame IDs:`, prev.map(f => f.id));
               console.log(`🔍 BACKGROUND LOADING: New frame IDs:`, newFrames.map(f => f.id));
               return newFrames;
             });
-            accumulatedFrames.length = 0; // Clear accumulated frames
           }
         }
 

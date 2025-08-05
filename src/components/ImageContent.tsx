@@ -347,6 +347,15 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         const totalAlbumPages = Math.ceil(albums.length / albumsPerPage);
         const totalImagePages = Math.ceil(keywordFrames.length / imagesPerPage);
 
+        console.log(`📄 PAGINATION DEBUG for "${keyword.text}":`, {
+          keywordFramesLength: keywordFrames.length,
+          imagesPerPage,
+          totalImagePagesCalculated: Math.ceil(keywordFrames.length / imagesPerPage),
+          totalImagePages,
+          maxExpectedFrames: keywordFrames.length,
+          is81FrameLimit: keywordFrames.length === 81
+        });
+
         const albumStartIndex = (currentAlbumPage - 1) * albumsPerPage;
         const albumEndIndex = albumStartIndex + albumsPerPage;
         const currentAlbums = albums.slice(albumStartIndex, albumEndIndex);
