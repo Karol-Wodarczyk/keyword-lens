@@ -38,9 +38,42 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const albumsPerPage = 2;
   const imagesPerPage = 9;
 
-  const { frames, loading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
+  // Background loading detection
+  const [frameCountHistory, setFrameCountHistory] = useState<number[]>([]);
+  const [lastFrameCountUpdate, setLastFrameCountUpdate] = useState<number>(Date.now());
+
+  const { frames, loading, backgroundLoading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
   const { albums, loading: albumsLoading, fetchAlbumsForKeywords, getAlbumFrames } = useAlbums();
   const { toast } = useToast();
+
+  // Helper function to calculate visible page numbers (max 15 pages)
+  const getVisiblePageNumbers = (currentPage: number, totalPages: number, maxVisible: number = 15) => {
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const halfVisible = Math.floor(maxVisible / 2);
+    let startPage = Math.max(1, currentPage - halfVisible);
+    const endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisible) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
+
+  // Track frame count changes to detect background loading
+  useEffect(() => {
+    if (frames.length > 0) {
+      setFrameCountHistory(prev => {
+        const newHistory = [...prev.slice(-5), frames.length]; // Keep last 5 counts
+        return newHistory;
+      });
+      setLastFrameCountUpdate(Date.now());
+    }
+  }, [frames.length]);
 
   // Fetch frames for selected keywords
   useEffect(() => {
@@ -524,7 +557,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                         </div>
                       </div>
                       {/* Fixed position pagination */}
-                      <div className="flex justify-center mt-2 py-1 flex-shrink-0">
+                      <div className="flex justify-center items-center mt-2 py-1 flex-shrink-0 gap-3">
                         {keywordFrames.length > imagesPerPage && (
                           <Pagination>
                             <PaginationContent className="gap-1">
@@ -534,7 +567,28 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                   className={`h-8 px-2 text-xs ${currentImagePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
                                 />
                               </PaginationItem>
-                              {Array.from({ length: totalImagePages }, (_, i) => i + 1).map((page) => (
+
+                              {/* Show ellipsis if we're not showing page 1 */}
+                              {getVisiblePageNumbers(currentImagePage, totalImagePages).includes(1) ? null : (
+                                <>
+                                  <PaginationItem>
+                                    <PaginationLink
+                                      onClick={() => setCurrentImagePage(1)}
+                                      className="h-8 w-8 text-xs cursor-pointer"
+                                    >
+                                      1
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                  {getVisiblePageNumbers(currentImagePage, totalImagePages)[0] > 2 && (
+                                    <PaginationItem>
+                                      <span className="h-8 w-8 flex items-center justify-center text-xs">...</span>
+                                    </PaginationItem>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Visible page numbers */}
+                              {getVisiblePageNumbers(currentImagePage, totalImagePages).map((page) => (
                                 <PaginationItem key={page}>
                                   <PaginationLink
                                     onClick={() => setCurrentImagePage(page)}
@@ -545,6 +599,26 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                   </PaginationLink>
                                 </PaginationItem>
                               ))}
+
+                              {/* Show ellipsis if we're not showing the last page */}
+                              {getVisiblePageNumbers(currentImagePage, totalImagePages).includes(totalImagePages) ? null : (
+                                <>
+                                  {getVisiblePageNumbers(currentImagePage, totalImagePages).slice(-1)[0] < totalImagePages - 1 && (
+                                    <PaginationItem>
+                                      <span className="h-8 w-8 flex items-center justify-center text-xs">...</span>
+                                    </PaginationItem>
+                                  )}
+                                  <PaginationItem>
+                                    <PaginationLink
+                                      onClick={() => setCurrentImagePage(totalImagePages)}
+                                      className="h-8 w-8 text-xs cursor-pointer"
+                                    >
+                                      {totalImagePages}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                </>
+                              )}
+
                               <PaginationItem>
                                 <PaginationNext
                                   onClick={() => setCurrentImagePage(Math.min(totalImagePages, currentImagePage + 1))}
@@ -553,6 +627,14 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                               </PaginationItem>
                             </PaginationContent>
                           </Pagination>
+                        )}
+
+                        {/* Background loading spinner */}
+                        {backgroundLoading && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Loading...</span>
+                          </div>
                         )}
                       </div>
                     </div>

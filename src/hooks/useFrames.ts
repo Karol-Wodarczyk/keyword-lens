@@ -31,6 +31,7 @@ export function useFrames() {
   const [frames, setFrames] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [backgroundLoading, setBackgroundLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchFramesForKeywords = useCallback(async (
@@ -106,9 +107,11 @@ export function useFrames() {
           console.log(`🔍 FRAME DEBUG: Starting background loading of ${remainingFrameIds.length} remaining frames`);
           console.log(`🔍 FRAME DEBUG: Remaining frame IDs:`, remainingFrameIds);
 
+          setBackgroundLoading(true);
+
           // Start background loading after a small delay
           setTimeout(() => {
-            loadFramesInBackground(remainingFrameIds, setFrames, apiClient);
+            loadFramesInBackground(remainingFrameIds, setFrames, apiClient, setBackgroundLoading);
           }, 100);
         } else {
           console.log(`🔍 FRAME DEBUG: No remaining frames to load in background`);
@@ -233,6 +236,7 @@ export function useFrames() {
   return {
     frames,
     loading,
+    backgroundLoading,
     error,
     fetchFramesForKeywords,
     fetchFramesFromCluster,
@@ -245,7 +249,8 @@ export function useFrames() {
 async function loadFramesInBackground(
   frameIds: number[],
   setFrames: React.Dispatch<React.SetStateAction<ImageItem[]>>,
-  apiClient: typeof import('../services/apiConfig').apiClient
+  apiClient: typeof import('../services/apiConfig').apiClient,
+  setBackgroundLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   console.log(`🔍 BACKGROUND LOADING: Starting with ${frameIds.length} frames:`, frameIds);
 
@@ -338,5 +343,8 @@ async function loadFramesInBackground(
     console.log(`🔍 BACKGROUND LOADING: Completed successfully. Total processed: ${processedCount} frames`);
   } catch (error) {
     console.error('🔍 BACKGROUND LOADING: Failed:', error);
+  } finally {
+    setBackgroundLoading(false);
+    console.log(`🔍 BACKGROUND LOADING: Background loading state set to false`);
   }
 }
