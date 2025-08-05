@@ -116,13 +116,57 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   };
 
   const handleDateRangeChange = (field: 'start' | 'end', date: Date | undefined) => {
+    if (!date) {
+      onFiltersChange({
+        ...filters,
+        dateRange: {
+          ...filters.dateRange,
+          [field]: null
+        }
+      });
+      return;
+    }
+
+    // If there's an existing date, preserve the time when changing the date
+    const existingDate = filters.dateRange[field];
+    if (existingDate) {
+      const newDate = new Date(date);
+      newDate.setHours(existingDate.getHours(), existingDate.getMinutes(), existingDate.getSeconds());
+      date = newDate;
+    }
+
     onFiltersChange({
       ...filters,
       dateRange: {
         ...filters.dateRange,
-        [field]: date || null
+        [field]: date
       }
     });
+  };
+
+  const handleTimeChange = (field: 'start' | 'end', timeValue: string) => {
+    const currentDate = filters.dateRange[field];
+    if (!currentDate) return;
+
+    const [hours, minutes, seconds] = timeValue.split(':').map(Number);
+    const newDate = new Date(currentDate);
+    newDate.setHours(hours, minutes, seconds || 0);
+
+    onFiltersChange({
+      ...filters,
+      dateRange: {
+        ...filters.dateRange,
+        [field]: newDate
+      }
+    });
+  };
+
+  const formatTimeForInput = (date: Date | null): string => {
+    if (!date) return '';
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
   };
 
   const handleAlbumSizeChange = (value: string) => {
@@ -365,7 +409,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               {/* Date Range Filter */}
               <div className="min-w-40">
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Date Range
+                  Date & Time Range
                 </label>
                 <Popover open={isDateRangeOpen} onOpenChange={setIsDateRangeOpen}>
                   <PopoverTrigger asChild>
@@ -378,31 +422,53 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {filters.dateRange.start && filters.dateRange.end
-                        ? `${format(filters.dateRange.start, "MMM dd")} - ${format(filters.dateRange.end, "MMM dd")}`
+                        ? `${format(filters.dateRange.start, "MMM dd HH:mm:ss")} - ${format(filters.dateRange.end, "MMM dd HH:mm:ss")}`
                         : filters.dateRange.start
-                          ? format(filters.dateRange.start, "MMM dd")
-                          : "Pick dates"}
+                          ? format(filters.dateRange.start, "MMM dd HH:mm:ss")
+                          : "Pick dates & times"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-4" align="start">
                     <div className="flex gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Start Date</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium mb-2 block">Start Date & Time</label>
                         <Calendar
                           mode="single"
                           selected={filters.dateRange.start || undefined}
                           onSelect={(date) => handleDateRangeChange('start', date)}
                           className="rounded-md border pointer-events-auto"
                         />
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
+                          <Input
+                            type="time"
+                            step="1"
+                            value={formatTimeForInput(filters.dateRange.start)}
+                            onChange={(e) => handleTimeChange('start', e.target.value)}
+                            className="w-full text-sm"
+                            disabled={!filters.dateRange.start}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">End Date</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium mb-2 block">End Date & Time</label>
                         <Calendar
                           mode="single"
                           selected={filters.dateRange.end || undefined}
                           onSelect={(date) => handleDateRangeChange('end', date)}
                           className="rounded-md border pointer-events-auto"
                         />
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
+                          <Input
+                            type="time"
+                            step="1"
+                            value={formatTimeForInput(filters.dateRange.end)}
+                            onChange={(e) => handleTimeChange('end', e.target.value)}
+                            className="w-full text-sm"
+                            disabled={!filters.dateRange.end}
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="mt-4">

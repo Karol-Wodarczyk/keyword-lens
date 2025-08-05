@@ -394,7 +394,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
               <div className="px-3 py-2 relative z-10 bg-gradient-card/95 border-b border-primary/10">
                 <div className="flex justify-between items-center gap-2">
                   <div className="text-xs min-w-0 flex-1 truncate">
-                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd/yy HH:mm')}</span>
                   </div>
                   <Checkbox
                     checked={selectedFrameIds.has(image.id)}
@@ -670,7 +670,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                               <div className="px-3 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95 border-b border-primary/10">
                                 <div className="flex justify-between items-center gap-2">
                                   <div className="text-xs min-w-0 flex-1 truncate">
-                                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd/yy HH:mm')}</span>
                                   </div>
                                   <Checkbox
                                     checked={selectedFrameIds.has(image.id)}
