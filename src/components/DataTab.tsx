@@ -109,6 +109,7 @@ export const DataTab: React.FC = () => {
           selectedKeywords={selectedKeywords}
           occurrence={occurrence}
           keywords={keywords}
+          filters={filters}
           onKeywordUpdate={() => { }} // No longer needed since keywords are managed by useKeywords hook
         />
       </div>

@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, Images, FolderOpen, Loader2 } from 'lucide-react';
-import { Keyword, Album, ImageItem, OccurrenceType } from '../types/keyword';
+import { Keyword, Album, ImageItem, OccurrenceType, FilterState } from '../types/keyword';
 import { ImageViewer } from './ImageViewer';
 import { useFrames } from '../hooks/useFrames';
 import { useAlbums } from '../hooks/useAlbums';
@@ -19,6 +19,7 @@ interface ImageContentProps {
   selectedKeywords: Keyword[];
   occurrence: OccurrenceType;
   keywords: Keyword[];
+  filters: FilterState;
   onKeywordUpdate: (keywords: Keyword[]) => void;
 }
 
@@ -26,6 +27,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   selectedKeywords,
   occurrence,
   keywords,
+  filters,
   onKeywordUpdate,
 }) => {
   const [viewerImage, setViewerImage] = useState<ImageItem | null>(null);
@@ -47,6 +49,17 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const { frames, loading, backgroundLoading, fetchFramesForKeywords, fetchFramesFromCluster, getFrameImage } = useFrames();
   const { albums, loading: albumsLoading, fetchAlbumsForKeywords, getAlbumFrames } = useAlbums();
   const { toast } = useToast();
+
+  // Helper function to sort frames by timestamp
+  const sortFrames = (framesToSort: ImageItem[], sortBy: 'newest' | 'oldest'): ImageItem[] => {
+    return [...framesToSort].sort((a, b) => {
+      if (sortBy === 'newest') {
+        return b.timestamp - a.timestamp; // Newest first (descending)
+      } else {
+        return a.timestamp - b.timestamp; // Oldest first (ascending)
+      }
+    });
+  };
 
   // Helper function to calculate visible page numbers (max 15 pages)
   const getVisiblePageNumbers = (currentPage: number, totalPages: number, maxVisible: number = 15) => {
@@ -309,7 +322,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
   // If an album is selected, show album view
   if (selectedAlbum) {
-    const albumImages = getAlbumImages(selectedAlbum.id);
+    const albumImages = sortFrames(getAlbumImages(selectedAlbum.id), filters.sortBy);
 
     return (
       <div className="space-y-6">
@@ -425,7 +438,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
         // The frames array already contains frames that match the selected keywords
         // No need to filter again since fetchFramesForKeywords already did the filtering
-        const keywordFrames = frames;
+        const keywordFrames = sortFrames(frames, filters.sortBy);
 
         // Pagination calculations
         const totalAlbumPages = Math.ceil(albums.length / albumsPerPage);
