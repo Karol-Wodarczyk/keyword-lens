@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -31,6 +32,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerKeywordContext, setViewerKeywordContext] = useState<Keyword | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [selectedFrameIds, setSelectedFrameIds] = useState<Set<string>>(new Set());
 
   // Pagination states
   const [currentAlbumPage, setCurrentAlbumPage] = useState(1);
@@ -74,6 +76,11 @@ export const ImageContent: React.FC<ImageContentProps> = ({
       setLastFrameCountUpdate(Date.now());
     }
   }, [frames.length]);
+
+  // Clear selected frames when keywords or albums change
+  useEffect(() => {
+    setSelectedFrameIds(new Set());
+  }, [selectedKeywords, selectedAlbum]);
 
   // Fetch frames for selected keywords
   useEffect(() => {
@@ -214,6 +221,18 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     }
   };
 
+  const handleFrameSelection = (frameId: string, checked: boolean) => {
+    setSelectedFrameIds(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(frameId);
+      } else {
+        newSet.delete(frameId);
+      }
+      return newSet;
+    });
+  };
+
   const getFilteredAlbums = (keyword: string) => {
     // Instead of filtering by album keywords, we should show all albums
     // since they were already filtered during fetchAlbumsForKeywords to contain
@@ -323,6 +342,31 @@ export const ImageContent: React.FC<ImageContentProps> = ({
           </div>
         </Card>
 
+        {/* Album Images Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Images className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Album Images</h3>
+            <Badge variant="outline" className="text-sm">{albumImages.length}</Badge>
+          </div>
+
+          {selectedFrameIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm">
+                {selectedFrameIds.size} selected
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedFrameIds(new Set())}
+                className="h-8 px-3 text-sm"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
+        </div>
+
         {/* Album Images Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {albumImages.map((image) => (
@@ -332,6 +376,22 @@ export const ImageContent: React.FC<ImageContentProps> = ({
               onClick={() => handleImageClick(image)}
             >
               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+
+              {/* Header with ID, timestamp, and checkbox */}
+              <div className="px-3 py-2 relative z-10 bg-gradient-card/95 border-b border-primary/10">
+                <div className="flex justify-between items-center gap-2">
+                  <div className="text-xs min-w-0 flex-1 truncate">
+                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                  </div>
+                  <Checkbox
+                    checked={selectedFrameIds.has(image.id)}
+                    onCheckedChange={(checked) => handleFrameSelection(image.id, checked as boolean)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-shrink-0"
+                  />
+                </div>
+              </div>
+
               <div className="aspect-square bg-muted relative overflow-hidden">
                 <img
                   src={image.thumbnailUrl}
@@ -339,14 +399,6 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                   className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-              <div className="p-3 relative z-10">
-                <div className="text-xs text-muted-foreground mb-1">
-                  ID: {image.id}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {format(new Date(image.timestamp), 'yyyy-MM-dd HH:mm:ss')}
-                </div>
               </div>
             </Card>
           ))}
@@ -564,10 +616,28 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
                 {/* Images Section - 70% width */}
                 <div className="w-[70%] flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Images className="h-4 w-4 text-primary" />
-                    <h4 className="font-medium text-foreground text-sm">Images</h4>
-                    <Badge variant="outline" className="text-xs">{keywordFrames.length}</Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Images className="h-4 w-4 text-primary" />
+                      <h4 className="font-medium text-foreground text-sm">Images</h4>
+                      <Badge variant="outline" className="text-xs">{keywordFrames.length}</Badge>
+                    </div>
+
+                    {selectedFrameIds.size > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedFrameIds.size} selected
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedFrameIds(new Set())}
+                          className="h-6 px-2 text-xs"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {keywordFrames.length > 0 ? (
@@ -582,6 +652,22 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                               onClick={() => handleImageClick(image, keyword)}
                             >
                               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+
+                              {/* Header with ID, timestamp, and checkbox */}
+                              <div className="px-3 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95 border-b border-primary/10">
+                                <div className="flex justify-between items-center gap-2">
+                                  <div className="text-xs min-w-0 flex-1 truncate">
+                                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                                  </div>
+                                  <Checkbox
+                                    checked={selectedFrameIds.has(image.id)}
+                                    onCheckedChange={(checked) => handleFrameSelection(image.id, checked as boolean)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-shrink-0"
+                                  />
+                                </div>
+                              </div>
+
                               <div className="flex-1 bg-muted relative overflow-hidden">
                                 <img
                                   src={image.thumbnailUrl}
@@ -589,14 +675,6 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                   className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                              </div>
-                              <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
-                                <div className="text-xs text-center leading-relaxed">
-                                  <div className="flex justify-between items-center gap-2">
-                                    <span className="font-medium text-foreground">ID: {image.id}</span>
-                                    <span className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
-                                  </div>
-                                </div>
                               </div>
                             </Card>
                           ))}
