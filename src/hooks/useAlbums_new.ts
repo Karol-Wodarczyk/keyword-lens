@@ -5,6 +5,7 @@ import { apiClient } from '../services/apiConfig';
 export const useAlbums = () => {
     const [albums, setAlbums] = useState<Album[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadingBackground, setLoadingBackground] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchAlbumsForKeywords = useCallback(async (keywordFrameIds: number[], progressiveLoad: boolean = true) => {
@@ -13,16 +14,7 @@ export const useAlbums = () => {
             return;
         }
 
-        // If we already have albums, don't refetch to prevent flickering
-        if (albums.length > 0) {
-            console.log('🔄 ALBUM DEBUG: Albums already loaded, skipping refetch to prevent flickering');
-            return;
-        }
-
-        // Don't clear albums if we already have some - prevent flickering
-        if (albums.length === 0) {
-            setLoading(true);
-        }
+        setLoading(true);
         setError(null);
 
         try {
@@ -126,31 +118,26 @@ export const useAlbums = () => {
                         setAlbums([...matchingAlbums]);
                         setLoading(false);
 
-                        // Process remaining albums in background (silently, no loading indicator)
+                        // Process remaining albums in background
                         const remainingAlbums = albumIds.slice(2);
                         if (remainingAlbums.length > 0) {
-                            // Process in larger batches with accumulated updates to reduce flashing
-                            const batchSize = 6;
-                            let accumulatedAlbums: Album[] = [];
+                            setLoadingBackground(true);
 
-                            for (let i = 0; i < remainingAlbums.length; i += batchSize) {
-                                const batchAlbums = remainingAlbums.slice(i, i + batchSize);
+                            // Process in batches of 2
+                            for (let i = 0; i < remainingAlbums.length; i += 2) {
+                                const batchAlbums = remainingAlbums.slice(i, i + 2);
                                 const batchResults = await processAlbumBatch(configId, batchAlbums);
 
                                 if (batchResults.length > 0) {
-                                    accumulatedAlbums.push(...batchResults);
                                     matchingAlbums.push(...batchResults);
-
-                                    // Only update UI every 2 batches or at the end
-                                    if (accumulatedAlbums.length >= 10 || i + batchSize >= remainingAlbums.length) {
-                                        setAlbums([...matchingAlbums]);
-                                        accumulatedAlbums = []; // Reset accumulator
-                                    }
+                                    setAlbums([...matchingAlbums]);
                                 }
 
-                                // Longer delay between batches to reduce flashing
-                                await new Promise(resolve => setTimeout(resolve, 1500));
+                                // Small delay between batches
+                                await new Promise(resolve => setTimeout(resolve, 200));
                             }
+
+                            setLoadingBackground(false);
                         }
                     } else {
                         // Process all albums at once for small datasets
@@ -172,8 +159,9 @@ export const useAlbums = () => {
             console.error('❌ ALBUM DEBUG: Error in fetchAlbumsForKeywords:', error);
             setError(error instanceof Error ? error.message : 'Failed to fetch albums');
             setLoading(false);
+            setLoadingBackground(false);
         }
-    }, [albums.length]);
+    }, []);
 
     const getAlbumFrames = useCallback(async (albumId: string) => {
         console.log('Getting frames for album:', albumId);
@@ -183,6 +171,7 @@ export const useAlbums = () => {
     return {
         albums,
         loading,
+        loadingBackground,
         error,
         fetchAlbumsForKeywords,
         getAlbumFrames,

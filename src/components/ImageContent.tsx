@@ -64,12 +64,13 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   // Fetch albums when frames are loaded
   useEffect(() => {
     if (frames.length > 0) {
-      const frameIds = frames.map(frame => parseInt(frame.id, 10));
-      console.log('📁 IMAGECONTENTDEBUG: Fetching albums for frame IDs:', frameIds.slice(0, 10), '... (total:', frameIds.length, ')');
-      console.log('📁 IMAGECONTENTDEBUG: Full frame IDs list:', frameIds);
-      fetchAlbumsForKeywords(frameIds);
+      // DISABLED FOR DEBUGGING - focusing only on frames
+      // const frameIds = frames.map(frame => parseInt(frame.id, 10));
+      // console.log('📁 IMAGECONTENTDEBUG: Fetching albums for frame IDs:', frameIds.slice(0, 10), '... (total:', frameIds.length, ')');
+      // console.log('📁 IMAGECONTENTDEBUG: Full frame IDs list:', frameIds);
+      // fetchAlbumsForKeywords(frameIds);
     } else {
-      console.log('📁 IMAGECONTENTDEBUG: No frames available for albums');
+      // console.log('📁 IMAGECONTENTDEBUG: No frames available for albums');
     }
   }, [frames, fetchAlbumsForKeywords]);
 
@@ -356,6 +357,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
         console.log(`🖼️ Displaying frames for keyword "${keyword.text}":`, {
           totalFramesFromAPI: frames.length,
+          framesState: frames.map(f => f.id),
           keywordFramesCount: keywordFrames.length,
           albumsCount: albums.length,
           currentAlbumsCount: currentAlbums.length,
@@ -480,7 +482,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                     <Badge variant="outline" className="text-xs">{keywordFrames.length}</Badge>
                   </div>
 
-                   {keywordFrames.length > 0 ? (
+                  {keywordFrames.length > 0 ? (
                     <div className="flex flex-col h-full">
                       {/* Increased height grid container with better spacing for 3 rows */}
                       <div className="h-[550px] flex-shrink-0 overflow-hidden">
@@ -500,14 +502,14 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                 />
                                 <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                               </div>
-                               <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
-                                 <div className="text-xs text-center leading-relaxed">
-                                   <div className="flex justify-between items-center gap-2">
-                                     <span className="font-medium text-foreground">ID: {image.id}</span>
-                                     <span className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
-                                   </div>
-                                 </div>
-                               </div>
+                              <div className="px-2 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95">
+                                <div className="text-xs text-center leading-relaxed">
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="font-medium text-foreground">ID: {image.id}</span>
+                                    <span className="text-muted-foreground/90">{format(new Date(image.timestamp), 'MM/dd HH:mm')}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </Card>
                           ))}
                         </div>

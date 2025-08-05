@@ -7,7 +7,7 @@ import { useKeywords } from '../hooks/useKeywords';
 
 export const DataTab: React.FC = () => {
   const { keywords, loading: keywordsLoading, toggleKeyword, editKeyword, toggleKeywordVisibility } = useKeywords();
-  const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('low');
+  const [occurrence, setOccurrence] = useState<'high' | 'medium' | 'low'>('high');
   const [filters, setFilters] = useState<FilterState>({
     dateRange: { start: null, end: null },
     albumSizeRange: { min: 0, max: 1000 },

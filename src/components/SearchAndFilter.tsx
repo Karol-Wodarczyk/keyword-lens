@@ -89,6 +89,9 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     const matchesOccurrence = keyword.imageCount >= minCount && keyword.imageCount <= maxCount;
 
     return matchesSearch && matchesHiddenFilter && matchesOccurrence;
+  }).sort((a, b) => {
+    // Sort by number of frames (imageCount) in descending order - highest at the top
+    return b.imageCount - a.imageCount;
   });
 
   const selectedCount = keywords.filter(k => k.isSelected).length;

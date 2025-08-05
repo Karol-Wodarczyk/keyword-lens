@@ -25,7 +25,9 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
     timestamp: new Date(frameMetadata.Timestamp).getTime(),
     isSelected: false,
   };
-} export function useFrames() {
+}
+
+export function useFrames() {
   const [frames, setFrames] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,8 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
   const fetchFramesForKeywords = useCallback(async (
     keywordIds: string[],
     confidenceMin: number = 0,
-    confidenceMax: number = 1
+    confidenceMax: number = 1,
+    progressiveLoad: boolean = true
   ) => {
     if (keywordIds.length === 0) {
       setFrames([]);
@@ -52,7 +55,9 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
         keywordIds,
         numericKeywordIds,
         confidenceMin,
-        confidenceMax
+        confidenceMax,
+        progressiveLoad,
+        apiType: 'API Type Check: ' + (apiClient.getFramesForKeywords ? 'Real API' : 'Mock API')
       });
 
       // Note: confidence parameters are ignored as confidence is not currently used
@@ -66,43 +71,84 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
 
       console.log('🔍 FRAME DEBUG: API response:', {
         frameIdsCount: frameIdsResponse.values.length,
-        frameIds: frameIdsResponse.values.slice(0, 10)
+        frameIds: frameIdsResponse.values.slice(0, 10),
+        totalFramesReturned: frameIdsResponse.values.length,
+        willUseProgressiveLoading: progressiveLoad && frameIdsResponse.values.length > 9,
+        expectedFor284Conveyor: 'Should be 284 if using real API, much less if using mock API'
       });
 
-      // Fetch metadata, thumbnails, and keywords for each frame
-      const framePromises = frameIdsResponse.values.map(async (frameId) => {
-        const [metadata, thumbnail, frameKeywords] = await Promise.all([
-          apiClient.getFrameMetadata(frameId.toString()),
-          apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
-          apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
-        ]);
+      // Use progressive loading for large datasets to improve UX
+      if (progressiveLoad && frameIdsResponse.values.length > 9) {
+        // Load first page (9 frames) immediately
+        const firstPageFrameIds = frameIdsResponse.values.slice(0, 9);
+        console.log(`🔍 FRAME DEBUG: Loading first 9 frames immediately`);
 
-        const frame = transformFrame(metadata, thumbnail.thumbnail);
-        // Populate keywords for this frame
-        frame.keywords = frameKeywords.map(fk => fk.KeywordName);
-        return frame;
-      });
+        const firstPagePromises = firstPageFrameIds.map(async (frameId) => {
+          const [metadata, thumbnail, frameKeywords] = await Promise.all([
+            apiClient.getFrameMetadata(frameId.toString()),
+            apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+            apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
+          ]);
 
-      const transformedFrames = await Promise.all(framePromises);
+          const frame = transformFrame(metadata, thumbnail.thumbnail);
+          frame.keywords = frameKeywords.map(fk => fk.KeywordName);
+          return frame;
+        });
 
-      console.log('🔍 useFrames: Transformed frames:', {
-        transformedFramesCount: transformedFrames.length,
-        sampleFrame: transformedFrames[0]
-      });
+        const firstPageFrames = await Promise.all(firstPagePromises);
+        setFrames(firstPageFrames);
+        setLoading(false);
+        console.log(`🔍 FRAME DEBUG: First 9 frames loaded, loading indicator hidden`);
 
-      setFrames(transformedFrames);
+        // Load remaining frames in background
+        const remainingFrameIds = frameIdsResponse.values.slice(9);
+        if (remainingFrameIds.length > 0) {
+          console.log(`🔍 FRAME DEBUG: Starting background loading of ${remainingFrameIds.length} remaining frames`);
+          console.log(`🔍 FRAME DEBUG: Remaining frame IDs:`, remainingFrameIds);
+
+          // Start background loading after a small delay
+          setTimeout(() => {
+            loadFramesInBackground(remainingFrameIds, setFrames, apiClient);
+          }, 100);
+        } else {
+          console.log(`🔍 FRAME DEBUG: No remaining frames to load in background`);
+        }
+      } else {
+        // Load all frames at once (fallback or small dataset)
+        console.log(`🔍 FRAME DEBUG: Loading all ${frameIdsResponse.values.length} frames at once (no progressive loading)`);
+        const framePromises = frameIdsResponse.values.map(async (frameId) => {
+          const [metadata, thumbnail, frameKeywords] = await Promise.all([
+            apiClient.getFrameMetadata(frameId.toString()),
+            apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+            apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
+          ]);
+
+          const frame = transformFrame(metadata, thumbnail.thumbnail);
+          frame.keywords = frameKeywords.map(fk => fk.KeywordName);
+          return frame;
+        });
+
+        const transformedFrames = await Promise.all(framePromises);
+        console.log(`🔍 FRAME DEBUG: Loaded ${transformedFrames.length} frames directly (no progressive loading)`);
+        setFrames(transformedFrames);
+        setLoading(false);
+      }
+
+      console.log('🔍 useFrames: Frame loading process completed');
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch frames';
       setError(errorMessage);
+      setLoading(false);
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]); const getFrameImage = async (frameId: string): Promise<string> => {
+  }, [toast]);
+
+  const getFrameImage = async (frameId: string): Promise<string> => {
     try {
       const response = await apiClient.getFrame(frameId);
       return apiClient.base64ToDataUrl(response.frame);
@@ -193,4 +239,86 @@ function transformFrame(frameMetadata: FrameMetaDataDto, thumbnailBase64?: strin
     getFrameImage,
     updateFrameKeywords,
   };
+}
+
+// Separate function for background loading to avoid complex nesting
+async function loadFramesInBackground(
+  frameIds: number[],
+  setFrames: React.Dispatch<React.SetStateAction<ImageItem[]>>,
+  apiClient: typeof import('../services/apiConfig').apiClient
+) {
+  console.log(`🔍 BACKGROUND LOADING: Starting with ${frameIds.length} frames:`, frameIds);
+
+  try {
+    const batchSize = 18;
+    const accumulatedFrames: ImageItem[] = [];
+    let processedCount = 0;
+
+    for (let i = 0; i < frameIds.length; i += batchSize) {
+      const batchFrameIds = frameIds.slice(i, i + batchSize);
+      console.log(`🔍 BACKGROUND LOADING: Processing batch ${Math.floor(i / batchSize) + 1}, frames ${i + 1}-${Math.min(i + batchSize, frameIds.length)} of ${frameIds.length}`);
+      console.log(`🔍 BACKGROUND LOADING: Batch frame IDs:`, batchFrameIds);
+
+      try {
+        const batchPromises = batchFrameIds.map(async (frameId) => {
+          try {
+            console.log(`🔍 BACKGROUND LOADING: Processing individual frame ${frameId}`);
+            const [metadata, thumbnail, frameKeywords] = await Promise.all([
+              apiClient.getFrameMetadata(frameId.toString()),
+              apiClient.getFrameThumbnail(frameId.toString()).catch(() => ({ thumbnail: '' })),
+              apiClient.getFrameKeywords(frameId.toString()).catch(() => []),
+            ]);
+
+            const frame = transformFrame(metadata, thumbnail.thumbnail);
+            frame.keywords = frameKeywords.map(fk => fk.KeywordName);
+            console.log(`🔍 BACKGROUND LOADING: Successfully processed frame ${frameId}`);
+            return frame;
+          } catch (frameError) {
+            console.error(`🔍 BACKGROUND LOADING: Error processing frame ${frameId}:`, frameError);
+            return null; // Skip failed frames
+          }
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+        const batchFrames = batchResults.filter(frame => frame !== null) as ImageItem[];
+
+        console.log(`🔍 BACKGROUND LOADING: Batch completed, ${batchFrames.length} frames successfully processed`);
+
+        if (batchFrames.length > 0) {
+          accumulatedFrames.push(...batchFrames);
+          processedCount += batchFrames.length;
+
+          // For small datasets (< 36 frames), update UI immediately after each batch
+          // For large datasets, update UI every 2 batches or at the end to reduce flashing
+          const shouldUpdateUI = accumulatedFrames.length >= 36 ||
+            i + batchSize >= frameIds.length ||
+            frameIds.length <= 36; // Update immediately for small datasets
+
+          if (shouldUpdateUI) {
+            console.log(`🔍 BACKGROUND LOADING: Updating UI with ${accumulatedFrames.length} new frames (total processed: ${processedCount})`);
+            console.log(`🔍 BACKGROUND LOADING: Frame IDs being added:`, accumulatedFrames.map(f => f.id));
+            setFrames(prev => {
+              const newFrames = [...prev, ...accumulatedFrames];
+              console.log(`🔍 BACKGROUND LOADING: UI updated, total frames now: ${newFrames.length} (was ${prev.length}, added ${accumulatedFrames.length})`);
+              console.log(`🔍 BACKGROUND LOADING: Previous frame IDs:`, prev.map(f => f.id));
+              console.log(`🔍 BACKGROUND LOADING: New frame IDs:`, newFrames.map(f => f.id));
+              return newFrames;
+            });
+            accumulatedFrames.length = 0; // Clear accumulated frames
+          }
+        }
+
+        // Shorter delay for small datasets to speed up loading
+        const delay = frameIds.length <= 36 ? 200 : 400;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } catch (batchError) {
+        console.error(`🔍 BACKGROUND LOADING: Error processing batch ${Math.floor(i / batchSize) + 1}:`, batchError);
+        // Continue with next batch even if this one fails
+      }
+    }
+
+    console.log(`🔍 BACKGROUND LOADING: Completed successfully. Total processed: ${processedCount} frames`);
+  } catch (error) {
+    console.error('🔍 BACKGROUND LOADING: Failed:', error);
+  }
 }
