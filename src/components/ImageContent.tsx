@@ -97,13 +97,12 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   // Fetch albums when frames are loaded
   useEffect(() => {
     if (frames.length > 0) {
-      // DISABLED FOR DEBUGGING - focusing only on frames
-      // const frameIds = frames.map(frame => parseInt(frame.id, 10));
-      // console.log('📁 IMAGECONTENTDEBUG: Fetching albums for frame IDs:', frameIds.slice(0, 10), '... (total:', frameIds.length, ')');
-      // console.log('📁 IMAGECONTENTDEBUG: Full frame IDs list:', frameIds);
-      // fetchAlbumsForKeywords(frameIds);
+      const frameIds = frames.map(frame => parseInt(frame.id, 10));
+      console.log('📁 IMAGECONTENTDEBUG: Fetching albums for frame IDs:', frameIds.slice(0, 10), '... (total:', frameIds.length, ')');
+      console.log('📁 IMAGECONTENTDEBUG: Full frame IDs list:', frameIds);
+      fetchAlbumsForKeywords(frameIds);
     } else {
-      // console.log('📁 IMAGECONTENTDEBUG: No frames available for albums');
+      console.log('📁 IMAGECONTENTDEBUG: No frames available for albums');
     }
   }, [frames, fetchAlbumsForKeywords]);
 
@@ -479,27 +478,74 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                         ))}
                       </div>
                       {albums.length > albumsPerPage && (
-                        <div className="flex justify-center mt-1 w-full">
-                          <div className="flex items-center gap-1 text-xs">
-                            <button
-                              onClick={() => setCurrentAlbumPage(Math.max(1, currentAlbumPage - 1))}
-                              disabled={currentAlbumPage === 1}
-                              className="h-6 w-6 flex items-center justify-center rounded border border-primary/20 bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              ‹
-                            </button>
-                            <span className="px-2 text-muted-foreground">
-                              {currentAlbumPage} / {totalAlbumPages}
-                            </span>
-                            <button
-                              onClick={() => setCurrentAlbumPage(Math.min(totalAlbumPages, currentAlbumPage + 1))}
-                              disabled={currentAlbumPage === totalAlbumPages}
-                              className="h-6 w-6 flex items-center justify-center rounded border border-primary/20 bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              ›
-                            </button>
-                          </div>
-                        </div>
+                        <Pagination className="mt-1">
+                          <PaginationContent className="gap-1">
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentAlbumPage(Math.max(1, currentAlbumPage - 1))}
+                                className={`h-6 px-2 text-xs ${currentAlbumPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                              />
+                            </PaginationItem>
+
+                            {/* Show ellipsis if we're not showing page 1 */}
+                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(1) ? null : (
+                              <>
+                                <PaginationItem>
+                                  <PaginationLink
+                                    onClick={() => setCurrentAlbumPage(1)}
+                                    className="h-6 w-6 text-xs cursor-pointer"
+                                  >
+                                    1
+                                  </PaginationLink>
+                                </PaginationItem>
+                                {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5)[0] > 2 && (
+                                  <PaginationItem>
+                                    <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
+                                  </PaginationItem>
+                                )}
+                              </>
+                            )}
+
+                            {/* Visible page numbers */}
+                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setCurrentAlbumPage(page)}
+                                  isActive={currentAlbumPage === page}
+                                  className="h-6 w-6 text-xs cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            {/* Show ellipsis if we're not showing the last page */}
+                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(totalAlbumPages) ? null : (
+                              <>
+                                {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).slice(-1)[0] < totalAlbumPages - 1 && (
+                                  <PaginationItem>
+                                    <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
+                                  </PaginationItem>
+                                )}
+                                <PaginationItem>
+                                  <PaginationLink
+                                    onClick={() => setCurrentAlbumPage(totalAlbumPages)}
+                                    className="h-6 w-6 text-xs cursor-pointer"
+                                  >
+                                    {totalAlbumPages}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              </>
+                            )}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentAlbumPage(Math.min(totalAlbumPages, currentAlbumPage + 1))}
+                                className={`h-6 px-2 text-xs ${currentAlbumPage === totalAlbumPages ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       )}
                     </>
                   ) : (
