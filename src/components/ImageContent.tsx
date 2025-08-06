@@ -61,6 +61,67 @@ export const ImageContent: React.FC<ImageContentProps> = ({
     });
   };
 
+  // Helper function to filter frames by date range
+  const filterFramesByDateRange = (framesToFilter: ImageItem[]): ImageItem[] => {
+    const { start, end } = filters.dateRange;
+
+    if (!start && !end) {
+      return framesToFilter; // No date filter applied
+    }
+
+    console.log('🕐 DATEFILTER DEBUG: Filtering frames by date range:', {
+      startDate: start ? format(start, 'yyyy-MM-dd HH:mm:ss') : 'none',
+      endDate: end ? format(end, 'yyyy-MM-dd HH:mm:ss') : 'none',
+      startTimestamp: start?.getTime(),
+      endTimestamp: end?.getTime(),
+      totalFramesToFilter: framesToFilter.length
+    });
+
+    const filteredFrames = framesToFilter.filter(frame => {
+      const frameDate = frame.timestamp;
+      const frameDateTime = new Date(frameDate);
+
+      // If only start date is set
+      if (start && !end) {
+        const isAfterStart = frameDate >= start.getTime();
+        console.log(`🕐 Frame ${frame.id} (${format(frameDateTime, 'yyyy-MM-dd HH:mm:ss')}): after start? ${isAfterStart}`);
+        return isAfterStart;
+      }
+
+      // If only end date is set
+      if (!start && end) {
+        const isBeforeEnd = frameDate <= end.getTime();
+        console.log(`🕐 Frame ${frame.id} (${format(frameDateTime, 'yyyy-MM-dd HH:mm:ss')}): before end? ${isBeforeEnd}`);
+        return isBeforeEnd;
+      }
+
+      // If both start and end dates are set
+      if (start && end) {
+        const isAfterStart = frameDate >= start.getTime();
+        const isBeforeEnd = frameDate <= end.getTime();
+        const isInRange = isAfterStart && isBeforeEnd;
+        console.log(`🕐 Frame ${frame.id} (${format(frameDateTime, 'yyyy-MM-dd HH:mm:ss')}): in range? ${isInRange} (after start: ${isAfterStart}, before end: ${isBeforeEnd})`);
+        return isInRange;
+      }
+
+      return true;
+    });
+
+    console.log('🕐 DATEFILTER DEBUG: Filtering result:', {
+      originalCount: framesToFilter.length,
+      filteredCount: filteredFrames.length,
+      removedCount: framesToFilter.length - filteredFrames.length
+    });
+
+    return filteredFrames;
+  };
+
+  // Helper function to process frames (filter by date range and sort)
+  const processFrames = (framesToProcess: ImageItem[], sortBy: 'newest' | 'oldest'): ImageItem[] => {
+    const filteredFrames = filterFramesByDateRange(framesToProcess);
+    return sortFrames(filteredFrames, sortBy);
+  };
+
   // Helper function to calculate visible page numbers (max 15 pages)
   const getVisiblePageNumbers = (currentPage: number, totalPages: number, maxVisible: number = 15) => {
     if (totalPages <= maxVisible) {
@@ -322,7 +383,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
   // If an album is selected, show album view
   if (selectedAlbum) {
-    const albumImages = sortFrames(getAlbumImages(selectedAlbum.id), filters.sortBy);
+    const albumImages = processFrames(getAlbumImages(selectedAlbum.id), filters.sortBy);
 
     return (
       <div className="space-y-6">
@@ -438,7 +499,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
         // The frames array already contains frames that match the selected keywords
         // No need to filter again since fetchFramesForKeywords already did the filtering
-        const keywordFrames = sortFrames(frames, filters.sortBy);
+        const keywordFrames = processFrames(frames, filters.sortBy);
 
         // Pagination calculations
         const totalAlbumPages = Math.ceil(albums.length / albumsPerPage);

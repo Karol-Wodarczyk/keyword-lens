@@ -136,6 +136,34 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
       date = newDate;
     }
 
+    // Validate date range
+    const otherField = field === 'start' ? 'end' : 'start';
+    const otherDate = filters.dateRange[otherField];
+
+    if (otherDate && field === 'start' && date.getTime() > otherDate.getTime()) {
+      // Start date is after end date, auto-adjust end date
+      onFiltersChange({
+        ...filters,
+        dateRange: {
+          start: date,
+          end: new Date(date.getTime() + 60000) // Add 1 minute
+        }
+      });
+      return;
+    }
+
+    if (otherDate && field === 'end' && date.getTime() < otherDate.getTime()) {
+      // End date is before start date, auto-adjust start date
+      onFiltersChange({
+        ...filters,
+        dateRange: {
+          start: new Date(date.getTime() - 60000), // Subtract 1 minute
+          end: date
+        }
+      });
+      return;
+    }
+
     onFiltersChange({
       ...filters,
       dateRange: {
@@ -146,6 +174,36 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   };
 
   const handleTimeChange = (field: 'start' | 'end', newDate: Date) => {
+    // Validate time range
+    const otherField = field === 'start' ? 'end' : 'start';
+    const otherDate = filters.dateRange[otherField];
+
+    if (otherDate && field === 'start' && newDate.getTime() > otherDate.getTime()) {
+      // Start time is after end time, auto-adjust end time
+      const adjustedEndDate = new Date(newDate.getTime() + 60000); // Add 1 minute
+      onFiltersChange({
+        ...filters,
+        dateRange: {
+          start: newDate,
+          end: adjustedEndDate
+        }
+      });
+      return;
+    }
+
+    if (otherDate && field === 'end' && newDate.getTime() < otherDate.getTime()) {
+      // End time is before start time, auto-adjust start time
+      const adjustedStartDate = new Date(newDate.getTime() - 60000); // Subtract 1 minute
+      onFiltersChange({
+        ...filters,
+        dateRange: {
+          start: adjustedStartDate,
+          end: newDate
+        }
+      });
+      return;
+    }
+
     onFiltersChange({
       ...filters,
       dateRange: {
