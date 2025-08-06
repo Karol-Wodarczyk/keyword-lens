@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
+import { TimePicker } from '@/components/ui/time-picker';
 import {
   Search,
   ChevronDown,
@@ -144,14 +145,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     });
   };
 
-  const handleTimeChange = (field: 'start' | 'end', timeValue: string) => {
-    const currentDate = filters.dateRange[field];
-    if (!currentDate) return;
-
-    const [hours, minutes, seconds] = timeValue.split(':').map(Number);
-    const newDate = new Date(currentDate);
-    newDate.setHours(hours, minutes, seconds || 0);
-
+  const handleTimeChange = (field: 'start' | 'end', newDate: Date) => {
     onFiltersChange({
       ...filters,
       dateRange: {
@@ -159,14 +153,6 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         [field]: newDate
       }
     });
-  };
-
-  const formatTimeForInput = (date: Date | null): string => {
-    if (!date) return '';
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
   };
 
   const handleAlbumSizeChange = (value: string) => {
@@ -440,13 +426,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                         />
                         <div className="space-y-2">
                           <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
-                          <Input
-                            type="time"
-                            step="1"
-                            value={formatTimeForInput(filters.dateRange.start)}
-                            onChange={(e) => handleTimeChange('start', e.target.value)}
-                            className="w-full text-sm"
+                          <TimePicker
+                            value={filters.dateRange.start}
+                            onChange={(date) => handleTimeChange('start', date)}
                             disabled={!filters.dateRange.start}
+                            className="w-full"
                           />
                         </div>
                       </div>
@@ -460,13 +444,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                         />
                         <div className="space-y-2">
                           <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
-                          <Input
-                            type="time"
-                            step="1"
-                            value={formatTimeForInput(filters.dateRange.end)}
-                            onChange={(e) => handleTimeChange('end', e.target.value)}
-                            className="w-full text-sm"
+                          <TimePicker
+                            value={filters.dateRange.end}
+                            onChange={(date) => handleTimeChange('end', date)}
                             disabled={!filters.dateRange.end}
+                            className="w-full"
                           />
                         </div>
                       </div>
