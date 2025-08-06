@@ -73,22 +73,22 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-card border border-primary/20 backdrop-blur-sm">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">{image.title}</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden bg-gradient-card border border-primary/20 backdrop-blur-sm">
+        <DialogHeader className="pb-3">
+          <DialogTitle className="text-foreground text-lg">{image.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Main Keywords Label - Above Image */}
           {selectedKeywords.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Found for keywords:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1">
                 {selectedKeywords.map((keyword, index) => (
                   <Badge
                     key={index}
                     variant="default"
-                    className="bg-primary/20 border-primary/40 text-primary font-medium"
+                    className="bg-primary/20 border-primary/40 text-primary font-medium text-xs"
                   >
                     {keyword.text}
                   </Badge>
@@ -97,40 +97,41 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
             </div>
           )}
 
-          {/* Image Display */}
+          {/* Image Display - Reduced height */}
           <div className="relative bg-muted rounded-lg overflow-hidden shadow-glow">
             <img
               src={image.url}
               alt={image.title}
-              className="w-full h-auto max-h-[60vh] object-contain"
+              className="w-full h-auto max-h-[40vh] object-contain"
             />
           </div>
 
-          {/* Keywords Management */}
+          {/* Keywords Management - Scrollable section */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               All Keywords
-              <Badge variant="outline" className="border-primary/30 bg-secondary/50">
+              <Badge variant="outline" className="border-primary/30 bg-secondary/50 text-xs">
                 {sortedKeywords.length}
               </Badge>
             </h3>
 
-            <div className="grid gap-2">
+            {/* Scrollable keywords container */}
+            <div className="max-h-[25vh] overflow-y-auto pr-2 space-y-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
               {sortedKeywords.map((keyword, index) => (
                 <div
                   key={index}
                   className={`flex items-center justify-between p-2 rounded-lg border group hover:shadow-glow transition-all duration-300 ${isMainKeyword(keyword)
-                      ? 'bg-gradient-primary/10 border-primary/40 ring-1 ring-primary/20'
-                      : 'bg-gradient-subtle border-primary/20'
+                    ? 'bg-gradient-primary/10 border-primary/40 ring-1 ring-primary/20'
+                    : 'bg-gradient-subtle border-primary/20'
                     }`}
                 >
-                  <div className="flex items-center gap-2 flex-1">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     {editingKeyword === keyword ? (
                       <div className="flex items-center gap-1 flex-1">
                         <Input
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="flex-1 h-7"
+                          className="flex-1 h-6 text-sm"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleKeywordSave(keyword);
@@ -143,57 +144,59 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                         <Button
                           size="sm"
                           onClick={() => handleKeywordSave(keyword)}
-                          className="h-7 w-7 p-0"
+                          className="h-6 w-6 p-0"
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={handleKeywordCancel}
-                          className="h-7 w-7 p-0"
+                          className="h-6 w-6 p-0"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className={`font-medium text-sm ${isMainKeyword(keyword) ? 'text-primary font-semibold' : 'text-foreground'}`}>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className={`font-medium text-sm truncate ${isMainKeyword(keyword) ? 'text-primary font-semibold' : 'text-foreground'}`}>
                             {keyword}
                           </span>
-                          <Badge
-                            variant={isMainKeyword(keyword) ? "default" : "secondary"}
-                            className={`text-xs ${isMainKeyword(keyword)
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Badge
+                              variant={isMainKeyword(keyword) ? "default" : "secondary"}
+                              className={`text-xs ${isMainKeyword(keyword)
                                 ? 'bg-primary/20 border-primary/40 text-primary'
                                 : 'bg-secondary/50 border border-primary/20'
-                              }`}
-                          >
-                            {getKeywordImageCount(keyword)} images
-                          </Badge>
-                          {isMainKeyword(keyword) && (
-                            <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 text-primary">
-                              Main
+                                }`}
+                            >
+                              {getKeywordImageCount(keyword)}
                             </Badge>
-                          )}
+                            {isMainKeyword(keyword) && (
+                              <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 text-primary">
+                                Main
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleKeywordEdit(keyword)}
-                            className="h-7 w-7 p-0 hover:bg-primary/10"
+                            className="h-6 w-6 p-0 hover:bg-primary/10"
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3 w-3" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => onKeywordDelete(image.id, keyword)}
-                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
                             title="Delete keyword"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </>
@@ -203,8 +206,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               ))}
 
               {sortedKeywords.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
-                  <Save className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-4 text-muted-foreground">
+                  <Save className="h-5 w-5 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No keywords associated with this image</p>
                 </div>
               )}
