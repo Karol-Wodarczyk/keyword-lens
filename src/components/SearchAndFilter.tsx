@@ -477,10 +477,12 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                       <div className="space-y-3">
                         <label className="text-sm font-medium mb-2 block">Start Date & Time</label>
                         <Calendar
+                          key="start-calendar"
                           mode="single"
                           selected={filters.dateRange.start || undefined}
                           onSelect={(date) => handleDateRangeChange('start', date)}
                           className="rounded-md border pointer-events-auto"
+                          defaultMonth={filters.dateRange.start || undefined}
                         />
                         <div className="space-y-2">
                           <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
@@ -495,10 +497,12 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                       <div className="space-y-3">
                         <label className="text-sm font-medium mb-2 block">End Date & Time</label>
                         <Calendar
+                          key="end-calendar"
                           mode="single"
                           selected={filters.dateRange.end || undefined}
                           onSelect={(date) => handleDateRangeChange('end', date)}
                           className="rounded-md border pointer-events-auto"
+                          defaultMonth={filters.dateRange.end || undefined}
                         />
                         <div className="space-y-2">
                           <label className="text-xs font-medium text-muted-foreground">Time (HH:MM:SS)</label>
