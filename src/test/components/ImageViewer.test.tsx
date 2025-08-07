@@ -88,7 +88,7 @@ describe('ImageViewer', () => {
         if (keywordElements.length > 0) {
             // Hover over a keyword to reveal delete button
             fireEvent.mouseEnter(keywordElements[0].closest('div'))
-            
+
             await waitFor(() => {
                 const deleteButtons = screen.queryAllByRole('button', { name: /delete keyword/i })
                 if (deleteButtons.length > 0) {
@@ -97,7 +97,7 @@ describe('ImageViewer', () => {
                 }
             })
         }
-        
+
         // Test passes if no errors thrown
         expect(true).toBe(true)
     })
@@ -109,10 +109,10 @@ describe('ImageViewer', () => {
         // Since there are multiple "machine" elements, find one in the keyword grid
         const machineElements = screen.getAllByText('machine')
         const keywordGrid = screen.getByText('All Keywords').closest('[class*="space-y"]')
-        const machineInGrid = machineElements.find(el => 
+        const machineInGrid = machineElements.find(el =>
             keywordGrid?.contains(el)
         ) || machineElements[0]
-        
+
         fireEvent.doubleClick(machineInGrid)
 
         // If rename functionality is available, it should trigger the callback
@@ -181,10 +181,10 @@ describe('ImageViewer', () => {
         // Should display keywords in multiple columns (based on your multi-column layout)
         const machineElements = screen.getAllByText('machine')
         const keywordGrid = screen.getByText('All Keywords').closest('[class*="space-y"]')
-        const machineInGrid = machineElements.find(el => 
+        const machineInGrid = machineElements.find(el =>
             keywordGrid?.contains(el)
         )
-        
+
         if (machineInGrid) {
             const gridContainer = machineInGrid.closest('[class*="grid"]')
             if (gridContainer) {

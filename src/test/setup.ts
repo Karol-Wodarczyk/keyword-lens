@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -42,3 +43,6 @@ Object.defineProperty(window, 'matchMedia', {
         dispatchEvent: vi.fn(),
     })),
 })
+
+// Mock scrollIntoView for Radix UI components
+Element.prototype.scrollIntoView = () => { }

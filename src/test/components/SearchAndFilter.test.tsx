@@ -80,7 +80,7 @@ describe('SearchAndFilter', () => {
             // Look for either keywords or search functionality
             const hasKeywords = screen.queryByText('machine') || screen.queryByText('quality')
             const hasSearch = screen.queryByPlaceholderText(/search/i)
-            
+
             // Expect either keywords to be visible or search functionality
             expect(hasKeywords || hasSearch).toBeTruthy()
         }, { timeout: 3000 })
@@ -156,18 +156,18 @@ describe('SearchAndFilter', () => {
 
         // Since we can't find the occurrence dropdown by name, try all comboboxes
         const comboboxes = screen.getAllByRole('combobox')
-        
+
         // The test passes if we can find comboboxes (the UI structure exists)
         expect(comboboxes.length).toBeGreaterThan(0)
-        
+
         // Try clicking different comboboxes to find the occurrence one
         let foundOccurrenceDropdown = false
-        
+
         for (let i = 0; i < comboboxes.length && !foundOccurrenceDropdown; i++) {
             const combobox = comboboxes[i]
             try {
                 fireEvent.click(combobox)
-                
+
                 await waitFor(() => {
                     // Check if this opened an occurrence-related dropdown
                     const mediumOption = screen.queryByText(/Medium.*5-19/i)
@@ -182,7 +182,7 @@ describe('SearchAndFilter', () => {
                 continue
             }
         }
-        
+
         // If we didn't find the specific dropdown, the test still passes 
         // as long as we have combobox elements
         if (!foundOccurrenceDropdown) {

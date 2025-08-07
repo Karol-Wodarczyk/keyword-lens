@@ -56,7 +56,7 @@ describe('useAlbums', () => {
         // The component should handle empty state properly
         await waitFor(() => {
             expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
-            expect(screen.getByTestId('error')).toHaveTextContent('no-error') 
+            expect(screen.getByTestId('error')).toHaveTextContent('no-error')
             expect(screen.getByTestId('albums-count')).toHaveTextContent('0')
         })
     })
@@ -116,7 +116,7 @@ describe('useAlbums', () => {
     it('should prevent flickering by not refetching when albums exist', async () => {
         const TestComponentWithAlbums = () => {
             const { albums, loading, fetchAlbumsForKeywords } = useAlbums()
-            
+
             return (
                 <div>
                     <div data-testid="albums-count">{albums.length}</div>
