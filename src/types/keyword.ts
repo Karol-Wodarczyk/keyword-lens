@@ -39,6 +39,7 @@ export interface FilterState {
     max: number;
   };
   sortBy: 'newest' | 'oldest';
+  keywordSortBy: 'count-desc' | 'count-asc' | 'name-asc' | 'name-desc';
 }
 
 export type OccurrenceType = 'high' | 'medium' | 'low';

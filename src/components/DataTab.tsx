@@ -11,7 +11,8 @@ export const DataTab: React.FC = () => {
   const [filters, setFilters] = useState<FilterState>({
     dateRange: { start: null, end: null },
     albumSizeRange: { min: 0, max: 1000 },
-    sortBy: 'newest'
+    sortBy: 'newest',
+    keywordSortBy: 'count-desc'
   });
   const [bulkSelection, setBulkSelection] = useState<BulkSelectionState>({
     selectedImages: [],

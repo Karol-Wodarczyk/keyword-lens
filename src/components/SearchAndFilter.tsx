@@ -91,8 +91,19 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
     return matchesSearch && matchesHiddenFilter && matchesOccurrence;
   }).sort((a, b) => {
-    // Sort by number of frames (imageCount) in descending order - highest at the top
-    return b.imageCount - a.imageCount;
+    // Sort based on selected keyword sort option
+    switch (filters.keywordSortBy) {
+      case 'count-desc':
+        return b.imageCount - a.imageCount;
+      case 'count-asc':
+        return a.imageCount - b.imageCount;
+      case 'name-asc':
+        return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+      case 'name-desc':
+        return b.text.toLowerCase().localeCompare(a.text.toLowerCase());
+      default:
+        return b.imageCount - a.imageCount;
+    }
   });
 
   const selectedCount = keywords.filter(k => k.isSelected).length;
@@ -301,18 +312,32 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full"
                       />
-                      <div className="flex items-center justify-between">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowHiddenKeywords(!showHiddenKeywords)}
-                          className="gap-2"
-                          disabled={hiddenCount === 0}
-                        >
-                          {showHiddenKeywords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          {showHiddenKeywords ? 'Hide Hidden Keywords' : 'Show Hidden Keywords'}
-                        </Button>
-                      </div>
+                       <div className="flex items-center justify-between gap-2">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setShowHiddenKeywords(!showHiddenKeywords)}
+                           className="gap-2"
+                           disabled={hiddenCount === 0}
+                         >
+                           {showHiddenKeywords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                           {showHiddenKeywords ? 'Hide Hidden Keywords' : 'Show Hidden Keywords'}
+                         </Button>
+                         <Select 
+                           value={filters.keywordSortBy} 
+                           onValueChange={(value: any) => onFiltersChange({ ...filters, keywordSortBy: value })}
+                         >
+                           <SelectTrigger className="w-36 h-8">
+                             <SelectValue placeholder="Sort by" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="count-desc">Count ↓</SelectItem>
+                             <SelectItem value="count-asc">Count ↑</SelectItem>
+                             <SelectItem value="name-asc">Name A-Z</SelectItem>
+                             <SelectItem value="name-desc">Name Z-A</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
                     </div>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
