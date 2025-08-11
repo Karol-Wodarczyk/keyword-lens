@@ -39,8 +39,31 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   // Pagination states
   const [currentAlbumPage, setCurrentAlbumPage] = useState(1);
   const [currentImagePage, setCurrentImagePage] = useState(1);
+  const [currentAlbumImagePage, setCurrentAlbumImagePage] = useState(1);
   const albumsPerPage = 2;
+
+  // Dynamic images per page based on thumbnail size and screen width
+  const thumbnailSize = 180; // Fixed thumbnail width in pixels
+  const thumbnailHeight = 135; // Height for 4:3 aspect ratio (wider than tall)
+  const albumThumbnailSize = 160; // Slightly smaller for album view to fit more
+  const albumThumbnailHeight = 120; // Height for 4:3 aspect ratio
+  const calculateImagesPerPage = (containerWidth: number, thumbSize: number) => {
+    const gap = 24; // 6 * 4px gap (gap-6)
+    const imagesPerRow = Math.floor((containerWidth + gap) / (thumbSize + gap));
+    const rows = 3; // Keep 3 rows for main view
+    return Math.max(6, imagesPerRow * rows); // Minimum 6 images
+  };
+
+  const calculateAlbumImagesPerPage = (containerWidth: number, thumbSize: number) => {
+    const gap = 24; // 6 * 4px gap (gap-6)  
+    const imagesPerRow = Math.floor((containerWidth + gap) / (thumbSize + gap));
+    const rows = 4; // 4 rows for album view (more space)
+    return Math.max(8, imagesPerRow * rows); // Minimum 8 images
+  };
+
+  // Default values (will be updated by container size)
   const imagesPerPage = 9;
+  const albumImagesPerPage = 18;
 
   // Background loading detection
   const [frameCountHistory, setFrameCountHistory] = useState<number[]>([]);
@@ -154,6 +177,7 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   // Clear selected frames when keywords or albums change
   useEffect(() => {
     setSelectedFrameIds(new Set());
+    setCurrentAlbumImagePage(1); // Reset album image pagination when album changes
   }, [selectedKeywords, selectedAlbum]);
 
   // Fetch frames for selected keywords
@@ -214,14 +238,52 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   };
 
   const handleAlbumClick = async (album: Album) => {
+    console.log('🎯 ALBUM CLICK DEBUG: Album selected:', {
+      albumId: album.id,
+      albumName: album.name,
+      numericAlbumId: album.albumId,
+      configId: album.configId
+    });
+
     setSelectedAlbum(album);
-    // Fetch frames from the selected album/cluster
-    const clusterId = parseInt(album.id, 10);
-    await fetchFramesFromCluster(clusterId);
+    // Fetch frames from the selected album/cluster using the numeric albumId
+    const clusterId = album.albumId;
+
+    if (!clusterId || clusterId <= 0) {
+      console.error('❌ Invalid cluster ID:', {
+        albumId: album.id,
+        numericAlbumId: album.albumId,
+        albumName: album.name
+      });
+      toast({
+        title: "Error",
+        description: `Invalid album ID: ${album.albumId}. Cannot load album frames.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await fetchFramesFromCluster(clusterId);
+    } catch (error) {
+      console.error('❌ Failed to fetch frames from cluster:', error);
+      toast({
+        title: "Error",
+        description: `Failed to load album frames: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+      // Reset album selection on error
+      setSelectedAlbum(null);
+    }
   };
 
   const handleBackToKeywords = () => {
     setSelectedAlbum(null);
+    // Reload frames for the original selected keywords
+    if (selectedKeywords.length > 0) {
+      const filteredKeywordIds = selectedKeywords.map(k => k.id);
+      fetchFramesForKeywords(filteredKeywordIds, 0, 1);
+    }
   };
 
   const handleViewerClose = (open: boolean) => {
@@ -322,8 +384,9 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   };
 
   const getAlbumImages = (albumId: string) => {
-    // Would need to fetch album images from backend
-    return frames.slice(0, 6); // Mock implementation
+    // When an album is selected, frames contains the album-specific frames
+    // loaded by fetchFramesFromCluster in handleAlbumClick
+    return frames;
   };
 
   // Show loading state
@@ -385,6 +448,12 @@ export const ImageContent: React.FC<ImageContentProps> = ({
   if (selectedAlbum) {
     const albumImages = processFrames(getAlbumImages(selectedAlbum.id), filters.sortBy);
 
+    // Pagination calculations for album images
+    const totalAlbumImagePages = Math.ceil(albumImages.length / albumImagesPerPage);
+    const albumImageStartIndex = (currentAlbumImagePage - 1) * albumImagesPerPage;
+    const albumImageEndIndex = albumImageStartIndex + albumImagesPerPage;
+    const currentAlbumImages = albumImages.slice(albumImageStartIndex, albumImageEndIndex);
+
     return (
       <div className="space-y-6">
         {/* Album Header */}
@@ -442,40 +511,137 @@ export const ImageContent: React.FC<ImageContentProps> = ({
         </div>
 
         {/* Album Images Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {albumImages.map((image) => (
-            <Card
-              key={image.id}
-              className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative"
-              onClick={() => handleImageClick(image)}
+        <div className="flex flex-col">
+          <div className="flex-shrink-0 overflow-hidden">
+            <div
+              className="grid gap-6"
+              style={{
+                gridTemplateColumns: `repeat(auto-fit, minmax(${albumThumbnailSize}px, 1fr))`,
+                gridAutoRows: `${albumThumbnailHeight + 40}px`,
+                minHeight: currentAlbumImages.length > 8 ? '680px' : 'auto'
+              }}
             >
-              <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
+              {currentAlbumImages.map((image) => (
+                <Card
+                  key={image.id}
+                  className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative flex flex-col"
+                  style={{ width: `${albumThumbnailSize}px`, height: `${albumThumbnailHeight + 40}px` }}
+                  onClick={() => handleImageClick(image)}
+                >
+                  <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
 
-              {/* Header with ID, timestamp, and checkbox */}
-              <div className="px-3 py-2 relative z-10 bg-gradient-card/95 border-b border-primary/10">
-                <div className="flex justify-between items-center gap-2">
-                  <div className="text-xs min-w-0 flex-1 truncate">
-                    <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd/yy HH:mm')}</span>
+                  {/* Header with ID, timestamp, and checkbox */}
+                  <div className="px-3 py-2 relative z-10 flex-shrink-0 bg-gradient-card/95 border-b border-primary/10">
+                    <div className="flex justify-between items-center gap-2">
+                      <div className="text-xs min-w-0 flex-1 truncate">
+                        <span className="font-bold text-foreground">ID: {image.id}</span> • <span className="text-muted-foreground/70">{format(new Date(image.timestamp), 'MM/dd/yy HH:mm')}</span>
+                      </div>
+                      <Checkbox
+                        checked={selectedFrameIds.has(image.id)}
+                        onCheckedChange={(checked) => handleFrameSelection(image.id, checked as boolean)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-shrink-0"
+                      />
+                    </div>
                   </div>
-                  <Checkbox
-                    checked={selectedFrameIds.has(image.id)}
-                    onCheckedChange={(checked) => handleFrameSelection(image.id, checked as boolean)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-shrink-0"
-                  />
-                </div>
-              </div>
 
-              <div className="aspect-square bg-muted relative overflow-hidden">
-                <img
-                  src={image.thumbnailUrl}
-                  alt={image.title}
-                  className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-            </Card>
-          ))}
+                  <div
+                    className="bg-muted relative overflow-hidden"
+                    style={{ width: `${albumThumbnailSize}px`, height: `${albumThumbnailHeight}px` }}
+                  >
+                    <img
+                      src={image.thumbnailUrl}
+                      alt={image.title}
+                      className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Album Images Pagination */}
+          {albumImages.length > albumImagesPerPage && (
+            <div className="flex justify-center items-center mt-4 py-2 flex-shrink-0 gap-3">
+              <Pagination>
+                <PaginationContent className="gap-1">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentAlbumImagePage(Math.max(1, currentAlbumImagePage - 1))}
+                      className={`h-8 px-2 text-xs ${currentAlbumImagePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                    />
+                  </PaginationItem>
+
+                  {/* Show ellipsis if we're not showing page 1 */}
+                  {getVisiblePageNumbers(currentAlbumImagePage, totalAlbumImagePages).includes(1) ? null : (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setCurrentAlbumImagePage(1)}
+                          className="h-8 w-8 text-xs cursor-pointer"
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {getVisiblePageNumbers(currentAlbumImagePage, totalAlbumImagePages)[0] > 2 && (
+                        <PaginationItem>
+                          <span className="h-8 w-8 flex items-center justify-center text-xs">...</span>
+                        </PaginationItem>
+                      )}
+                    </>
+                  )}
+
+                  {/* Visible page numbers */}
+                  {getVisiblePageNumbers(currentAlbumImagePage, totalAlbumImagePages).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentAlbumImagePage(page)}
+                        isActive={currentAlbumImagePage === page}
+                        className="h-8 w-8 text-xs cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  {/* Show ellipsis if we're not showing the last page */}
+                  {getVisiblePageNumbers(currentAlbumImagePage, totalAlbumImagePages).includes(totalAlbumImagePages) ? null : (
+                    <>
+                      {getVisiblePageNumbers(currentAlbumImagePage, totalAlbumImagePages).slice(-1)[0] < totalAlbumImagePages - 1 && (
+                        <PaginationItem>
+                          <span className="h-8 w-8 flex items-center justify-center text-xs">...</span>
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setCurrentAlbumImagePage(totalAlbumImagePages)}
+                          className="h-8 w-8 text-xs cursor-pointer"
+                        >
+                          {totalAlbumImagePages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentAlbumImagePage(Math.min(totalAlbumImagePages, currentAlbumImagePage + 1))}
+                      className={`h-8 px-2 text-xs ${currentAlbumImagePage === totalAlbumImagePages ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+
+              {/* Loading indicator for album images */}
+              {loading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Image Viewer Dialog */}
@@ -604,74 +770,84 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                         ))}
                       </div>
                       {albums.length > albumsPerPage && (
-                        <Pagination className="mt-1">
-                          <PaginationContent className="gap-1">
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() => setCurrentAlbumPage(Math.max(1, currentAlbumPage - 1))}
-                                className={`h-6 px-2 text-xs ${currentAlbumPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
-                              />
-                            </PaginationItem>
-
-                            {/* Show ellipsis if we're not showing page 1 */}
-                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(1) ? null : (
-                              <>
-                                <PaginationItem>
-                                  <PaginationLink
-                                    onClick={() => setCurrentAlbumPage(1)}
-                                    className="h-6 w-6 text-xs cursor-pointer"
-                                  >
-                                    1
-                                  </PaginationLink>
-                                </PaginationItem>
-                                {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5)[0] > 2 && (
-                                  <PaginationItem>
-                                    <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
-                                  </PaginationItem>
-                                )}
-                              </>
-                            )}
-
-                            {/* Visible page numbers */}
-                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  onClick={() => setCurrentAlbumPage(page)}
-                                  isActive={currentAlbumPage === page}
-                                  className="h-6 w-6 text-xs cursor-pointer"
-                                >
-                                  {page}
-                                </PaginationLink>
+                        <div className="flex justify-center items-center mt-1 gap-3">
+                          <Pagination>
+                            <PaginationContent className="gap-1">
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  onClick={() => setCurrentAlbumPage(Math.max(1, currentAlbumPage - 1))}
+                                  className={`h-6 px-2 text-xs ${currentAlbumPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                />
                               </PaginationItem>
-                            ))}
 
-                            {/* Show ellipsis if we're not showing the last page */}
-                            {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(totalAlbumPages) ? null : (
-                              <>
-                                {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).slice(-1)[0] < totalAlbumPages - 1 && (
+                              {/* Show ellipsis if we're not showing page 1 */}
+                              {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(1) ? null : (
+                                <>
                                   <PaginationItem>
-                                    <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
+                                    <PaginationLink
+                                      onClick={() => setCurrentAlbumPage(1)}
+                                      className="h-6 w-6 text-xs cursor-pointer"
+                                    >
+                                      1
+                                    </PaginationLink>
                                   </PaginationItem>
-                                )}
-                                <PaginationItem>
+                                  {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5)[0] > 2 && (
+                                    <PaginationItem>
+                                      <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
+                                    </PaginationItem>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Visible page numbers */}
+                              {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).map((page) => (
+                                <PaginationItem key={page}>
                                   <PaginationLink
-                                    onClick={() => setCurrentAlbumPage(totalAlbumPages)}
+                                    onClick={() => setCurrentAlbumPage(page)}
+                                    isActive={currentAlbumPage === page}
                                     className="h-6 w-6 text-xs cursor-pointer"
                                   >
-                                    {totalAlbumPages}
+                                    {page}
                                   </PaginationLink>
                                 </PaginationItem>
-                              </>
-                            )}
+                              ))}
 
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() => setCurrentAlbumPage(Math.min(totalAlbumPages, currentAlbumPage + 1))}
-                                className={`h-6 px-2 text-xs ${currentAlbumPage === totalAlbumPages ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
+                              {/* Show ellipsis if we're not showing the last page */}
+                              {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).includes(totalAlbumPages) ? null : (
+                                <>
+                                  {getVisiblePageNumbers(currentAlbumPage, totalAlbumPages, 5).slice(-1)[0] < totalAlbumPages - 1 && (
+                                    <PaginationItem>
+                                      <span className="h-6 w-6 flex items-center justify-center text-xs">...</span>
+                                    </PaginationItem>
+                                  )}
+                                  <PaginationItem>
+                                    <PaginationLink
+                                      onClick={() => setCurrentAlbumPage(totalAlbumPages)}
+                                      className="h-6 w-6 text-xs cursor-pointer"
+                                    >
+                                      {totalAlbumPages}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                </>
+                              )}
+
+                              <PaginationItem>
+                                <PaginationNext
+                                  onClick={() => setCurrentAlbumPage(Math.min(totalAlbumPages, currentAlbumPage + 1))}
+                                  className={`h-6 px-2 text-xs ${currentAlbumPage === totalAlbumPages ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+
+                          {/* Albums loading indicator */}
+                          {albumsLoading && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Loading albums...</span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </>
                   ) : (
@@ -716,13 +892,20 @@ export const ImageContent: React.FC<ImageContentProps> = ({
 
                   {keywordFrames.length > 0 ? (
                     <div className="flex flex-col h-full">
-                      {/* Increased height grid container with better spacing for 3 rows */}
+                      {/* Responsive grid container with fixed thumbnail sizes */}
                       <div className="h-[550px] flex-shrink-0 overflow-hidden">
-                        <div className="grid grid-cols-3 gap-4 h-full" style={{ gridTemplateRows: 'repeat(3, 1fr)' }}>
+                        <div
+                          className="grid gap-6 h-full"
+                          style={{
+                            gridTemplateColumns: `repeat(auto-fit, minmax(${thumbnailSize}px, 1fr))`,
+                            gridAutoRows: `${thumbnailHeight + 40}px`
+                          }}
+                        >
                           {currentImages.map((image) => (
                             <Card
                               key={image.id}
                               className="overflow-hidden shadow-glow hover:shadow-hover transition-glow group cursor-pointer bg-gradient-card border border-primary/20 backdrop-blur-sm relative flex flex-col"
+                              style={{ width: `${thumbnailSize}px`, height: `${thumbnailHeight + 40}px` }}
                               onClick={() => handleImageClick(image, keyword)}
                             >
                               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-lg"></div>
@@ -742,7 +925,10 @@ export const ImageContent: React.FC<ImageContentProps> = ({
                                 </div>
                               </div>
 
-                              <div className="flex-1 bg-muted relative overflow-hidden">
+                              <div
+                                className="bg-muted relative overflow-hidden flex-1"
+                                style={{ width: `${thumbnailSize}px`, height: `${thumbnailHeight}px` }}
+                              >
                                 <img
                                   src={image.thumbnailUrl}
                                   alt={image.title}
